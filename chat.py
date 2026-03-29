@@ -65,10 +65,10 @@ MEMBERS = [
     },
 
     {
-        # ROHAN — The Dry Texter
+        # Yash — The Dry Texter
         # Man of few words. Replies with 1–3 words maximum — "lol", "ok",
         # "yeah fr", "nah". Never writes essays, barely uses emojis.
-        "name": "Rohan",
+        "name": "Yash",
         "personality": "Dry Texter",
         "traits": {
             "dry": 0.95,
@@ -91,11 +91,11 @@ MEMBERS = [
     },
 
     {
-        # SNEHA — The Essay Writer
+        # Shreya — The Essay Writer
         # When she replies, it's never less than a paragraph.
         # Slow to respond (she's composing a novel). Active mid-morning to
         # evening. Uses emojis to soften her walls of text.
-        "name": "Sneha",
+        "name": "Shreya",
         "personality": "Essay Writer",
         "traits": {
             "essay": 0.95,
@@ -171,10 +171,10 @@ MEMBERS = [
     },
 
     {
-        # JO — The Conversation Starter
+        # JOSHMITHA — The Conversation Starter
         # The group would be dead without her
         # replies fairly quickly, keeps the energy moving
-        "name": "Jo",
+        "name": "Joshmitha",
         "personality": "Conversation Starter",
         "traits": {
             "conversation_starter": 0.95,
