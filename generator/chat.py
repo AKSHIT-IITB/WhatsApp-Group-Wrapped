@@ -6,10 +6,18 @@ import sys, os
 def load_vocabulary(path):
     with open(path, 'r', encoding='utf-8') as f:
         content = f.read()
+    # Normalise newlines → commas so both formats work identically
+    content = content.replace('\n', ',').replace('\r', ',')
     words = [w.strip() for w in content.split(',') if w.strip()]
+    if not words:
+        print("WARNING: vocabulary.txt appears empty or unreadable.")
     return words
 
-EMOJIS = ['😂','😂😂','🥀','🥺','🤣','😭','😭💀','🤡','🥲','😢','👍','👍👍']
+EMOJIS =  [
+  "😀", "😂", "😂😂", "😍", "😎", "🤔", "😢", "😭", "😭💀",
+  "🔥", "🚀", "🎯", "💡", "📚", "⚡", "🌍", "🎉", "🧠",
+  "🥀", "🥺", "🤣", "🤡", "🥲", "👍", "👍👍"
+]
 
 MEMBERS = [
     {
@@ -36,6 +44,7 @@ MEMBERS = [
         "msg_len_min": 2, "msg_len_max": 5,
         "streak_prob": 0.65, "min_streak": 2, "max_streak": 5,
         "post_streak_silence": None,
+        "max_messages": 10, "window_minutes": 40,
     },
 
     {
@@ -62,6 +71,7 @@ MEMBERS = [
         "msg_len_min": 2, "msg_len_max": 10,
         "streak_prob": 0.15, "min_streak": 1, "max_streak": 2,
         "post_streak_silence": None,
+        "max_messages": 6, "window_minutes": 60,
     },
 
     {
@@ -88,6 +98,7 @@ MEMBERS = [
         "msg_len_min": 1, "msg_len_max": 3,
         "streak_prob": 0.20, "min_streak": 1, "max_streak": 3,
         "post_streak_silence": None,
+        "max_messages": 5, "window_minutes": 45,
     },
 
     {
@@ -115,6 +126,7 @@ MEMBERS = [
         "msg_len_min": 20, "msg_len_max": 60,
         "streak_prob": 0.08, "min_streak": 1, "max_streak": 2,
         "post_streak_silence": None,
+        "max_messages": 3, "window_minutes": 90,
     },
 
     {
@@ -142,6 +154,7 @@ MEMBERS = [
         "msg_len_min": 3, "msg_len_max": 12,
         "streak_prob": 0.70, "min_streak": 4, "max_streak": 7,
         "post_streak_silence": (120, 480),
+        "max_messages": 8, "window_minutes": 30,
     },
 
     {
@@ -168,6 +181,7 @@ MEMBERS = [
         "msg_len_min": 1, "msg_len_max": 4,
         "streak_prob": 0.05, "min_streak": 1, "max_streak": 1,
         "post_streak_silence": None,
+        "max_messages": 2, "window_minutes": 60,
     },
 
     {
@@ -194,6 +208,7 @@ MEMBERS = [
         "msg_len_min": 4, "msg_len_max": 18,
         "streak_prob": 0.20, "min_streak": 1, "max_streak": 3,
         "post_streak_silence": None,
+        "max_messages": 7, "window_minutes": 45,
     },
 
     {
@@ -221,30 +236,34 @@ MEMBERS = [
         "msg_len_min": 3, "msg_len_max": 15,
         "streak_prob": 0.30, "min_streak": 1, "max_streak": 4,
         "post_streak_silence": None,
+        "max_messages": 9, "window_minutes": 35,
     },
 ]
-
-# gen a message 
 def generate_message(words, member):
-    
     length = random.randint(member["msg_len_min"], member["msg_len_max"])
-    msg = " ".join(random.choice(words) for _ in range(length))
+
+    # Always produce a plain string from the sampled words
+    msg = " ".join(random.sample(words, k=length))
 
     if random.random() < member["traits"]["emoji"]:
-        
         personality = member["personality"]
-        emoji_queen = "Emoji Queen" in personality
+        emoji_queen = isinstance(personality, list) and "Emoji Queen" in personality
         if emoji_queen:
-            n = random.randint(1, 3)
+            n = random.randint(1, 4)
+            emoji_part = random.choices(EMOJIS, k=n)
+            # Mix emojis into the word tokens for a natural feel
+            tokens = msg.split() + emoji_part
+            random.shuffle(tokens)
+            msg = " ".join(tokens)
         else:
-            n = 1
-
-        for _ in range(n):
-            msg += " " + random.choice(EMOJIS)
+            n = random.randint(1, 2)
+            emoji_part = random.choices(EMOJIS, k=n)
+            tokens = msg.split() + emoji_part
+            random.shuffle(tokens)
+            msg = " ".join(tokens)
 
     return msg
 
-#
 def get_random_hour(member):
     w = np.array(member["hour_weights"], dtype=float)
     total = w.sum()
@@ -252,47 +271,115 @@ def get_random_hour(member):
         return random.randint(0, 23)
     return int(np.random.choice(len(w), p=w / total))
 
-# func to generate the total chats messages
-def generate_chat(vocabulary_path, output_path="chat.txt", num_messages=900):
+def pick_member(current_time, recent_msgs):
+    """
+    Select the next sender weighted by freq_weight * hour_weight.
+    Applies a FATIGUE PENALTY if a member has sent too many messages
+    in their personal fatigue window — prevents any one person from
+    monopolising the chat for hours on end.
+
+    recent_msgs: dict  name -> list of datetime objects (recent send times)
+    """
+    hour = current_time.hour
+    weights = []
+    for m in MEMBERS:
+        base = m["freq_weight"] * m["hour_weights"][hour]
+
+        # Count how many of this member's recent messages fall inside their window
+        cutoff = current_time - timedelta(minutes=m["window_minutes"])
+        msgs_in_window = sum(1 for t in recent_msgs[m["name"]] if t >= cutoff)
+
+        # If they have hit or exceeded their fatigue limit, slash their weight
+        # 0.05 multiplier means they CAN still send, just very unlikely
+        if msgs_in_window >= m["max_messages"]:
+            base *= 0.05
+
+        weights.append(base)
+
+    combined = np.array(weights, dtype=float)
+    total = combined.sum()
+    if total <= 0:                          # fallback: ignore fatigue
+        combined = np.array([m["freq_weight"] for m in MEMBERS], dtype=float)
+        total = combined.sum()
+    return MEMBERS[int(np.random.choice(len(MEMBERS), p=combined / total))]
+
+def advance_time(current_time):
+    """
+    Move the clock forward by a random gap.
+    5%  → long silence (1 h – 48 h)  — group goes quiet
+    25% → medium gap  (5 – 60 min)
+    70% → quick reply (1 – 8 min)
+    Time ONLY ever moves forward.
+    """
+    r = random.random()
+    if r < 0.05:
+        gap = random.randint(60, 2880)
+    elif r < 0.30:
+        gap = random.randint(5, 60)
+    else:
+        gap = random.randint(1, 8)
+    return current_time + timedelta(minutes=gap)
+
+def record_send(recent_msgs, name, ts):
+    """Append ts to this member's recent send log (keep last 50 only)."""
+    recent_msgs[name].append(ts)
+    if len(recent_msgs[name]) > 50:
+        recent_msgs[name].pop(0)
+
+
+def generate_chat(vocabulary_path, output_path="chat.txt"):
     words = load_vocabulary(vocabulary_path)
-    # print(f"Loaded {len(words)} vocabulary words.")
 
     current_time = datetime(2024, 7, 22, 10, 0, 0)
     end_time     = datetime(2024, 11, 20, 23, 59, 59)
 
-    freq_probs = np.array([m["freq_weight"] for m in MEMBERS], dtype=float)
-    freq_probs /= freq_probs.sum()
-
     messages = []
 
-    while len(messages) < num_messages and current_time < end_time:
-        member = MEMBERS[int(np.random.choice(len(MEMBERS), p=freq_probs))]
+    # Track per-member "silent until" for the Ghoster's post-burst blackout.
+    silent_until = {m["name"]: datetime.min for m in MEMBERS}
 
-        r = random.random()
-        if r < 0.05:
-            gap = random.randint(60, 2880)   # long silence
-        elif r < 0.30:
-            gap = random.randint(5, 60)
-        else:
-            gap = random.randint(1, 8)
+    # Track recent send timestamps per member for fatigue calculation.
+    # Each entry is a list of datetimes of recent sends.
+    recent_msgs = {m["name"]: [] for m in MEMBERS}
 
-        current_time += timedelta(minutes=gap)
+    while current_time <= end_time:
+
+        # Always move the clock forward first
+        current_time = advance_time(current_time)
         if current_time > end_time:
             break
 
-        hour = get_random_hour(member)
-        current_time = current_time.replace(hour=hour, minute=random.randint(0, 59))
+        # Pick a sender weighted by activity at current hour + fatigue state
+        member = pick_member(current_time, recent_msgs)
+
+        # Respect post-streak silence (Ghoster goes dark after a burst)
+        if current_time < silent_until[member["name"]]:
+            continue
 
         ts = current_time.strftime("%d/%m/%y, %H:%M")
         messages.append(f"{ts} - {member['name']}: {generate_message(words, member)}")
+        record_send(recent_msgs, member["name"], current_time)
 
+        # Streak logic — all follow-ups still move time forward
         if random.random() < member["streak_prob"]:
-            for _ in range(random.randint(1, member["max_streak"])):
+            streak_len = random.randint(member["min_streak"], member["max_streak"])
+            for _ in range(streak_len):
                 current_time += timedelta(minutes=random.randint(1, 4))
-                ts = current_time.strftime("%d/%m/%y, %H:%M")
-                messages.append(f"{ts} - {member['name']}: {generate_message(words, member)}")
-                if len(messages) >= num_messages:
+                if current_time > end_time:
                     break
+                ts = current_time.strftime("%d/%m/%y, %H:%M")
+                messages.append(
+                    f"{ts} - {member['name']}: {generate_message(words, member)}"
+                )
+                record_send(recent_msgs, member["name"], current_time)
+
+            # After the Ghoster's burst, enforce a hard silence window
+            if member["post_streak_silence"]:
+                lo, hi = member["post_streak_silence"]
+                blackout_minutes = random.randint(lo, hi)
+                silent_until[member["name"]] = current_time + timedelta(
+                    minutes=blackout_minutes
+                )
 
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write('\n'.join(messages))
