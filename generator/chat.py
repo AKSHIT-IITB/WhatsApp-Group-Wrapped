@@ -6,7 +6,6 @@ import sys, os
 def load_vocabulary(path):
     with open(path, 'r', encoding='utf-8') as f:
         content = f.read()
-    # Normalise newlines → commas so both formats work identically
     content = content.replace('\n', ',').replace('\r', ',')
     words = [w.strip() for w in content.split(',') if w.strip()]
     if not words:
@@ -271,7 +270,7 @@ def get_random_hour(member):
         return random.randint(0, 23)
     return int(np.random.choice(len(w), p=w / total))
 
-def pick_member(current_time, recent_msgs):
+def get_next_member(current_time, recent_msgs):
     """
     Select the next sender weighted by freq_weight * hour_weight.
     Applies a FATIGUE PENALTY if a member has sent too many messages
@@ -303,7 +302,7 @@ def pick_member(current_time, recent_msgs):
         total = combined.sum()
     return MEMBERS[int(np.random.choice(len(MEMBERS), p=combined / total))]
 
-def advance_time(current_time):
+def time_gap(current_time):
     """
     Move the clock forward by a random gap.
     5%  → long silence (1 h – 48 h)  — group goes quiet
@@ -320,7 +319,7 @@ def advance_time(current_time):
         gap = random.randint(1, 8)
     return current_time + timedelta(minutes=gap)
 
-def record_send(recent_msgs, name, ts):
+def track_recent_messages(recent_msgs, name, ts):
     """Append ts to this member's recent send log (keep last 50 only)."""
     recent_msgs[name].append(ts)
     if len(recent_msgs[name]) > 50:
@@ -345,12 +344,12 @@ def generate_chat(vocabulary_path, output_path="chat.txt"):
     while current_time <= end_time:
 
         # Always move the clock forward first
-        current_time = advance_time(current_time)
+        current_time = time_gap(current_time)
         if current_time > end_time:
             break
 
         # Pick a sender weighted by activity at current hour + fatigue state
-        member = pick_member(current_time, recent_msgs)
+        member = get_next_member(current_time, recent_msgs)
 
         # Respect post-streak silence (Ghoster goes dark after a burst)
         if current_time < silent_until[member["name"]]:
@@ -358,7 +357,7 @@ def generate_chat(vocabulary_path, output_path="chat.txt"):
 
         ts = current_time.strftime("%d/%m/%y, %H:%M")
         messages.append(f"{ts} - {member['name']}: {generate_message(words, member)}")
-        record_send(recent_msgs, member["name"], current_time)
+        track_recent_messages(recent_msgs, member["name"], current_time)
 
         # Streak logic — all follow-ups still move time forward
         if random.random() < member["streak_prob"]:
@@ -371,7 +370,7 @@ def generate_chat(vocabulary_path, output_path="chat.txt"):
                 messages.append(
                     f"{ts} - {member['name']}: {generate_message(words, member)}"
                 )
-                record_send(recent_msgs, member["name"], current_time)
+                track_recent_messages(recent_msgs, member["name"], current_time)
 
             # After the Ghoster's burst, enforce a hard silence window
             if member["post_streak_silence"]:
@@ -383,11 +382,11 @@ def generate_chat(vocabulary_path, output_path="chat.txt"):
 
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write('\n'.join(messages))
-    print(f"Generated {len(messages)} messages → {output_path}")
+    print(f"Generated {len(messages)} messages : {output_path}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python chat.py <vocabulary.txt>")
+        print("Usage: python3 chat.py <vocabulary.txt>")
         sys.exit(1)
     out = sys.argv[2] if len(sys.argv) > 2 else "chat.txt"
     generate_chat(sys.argv[1], out)
