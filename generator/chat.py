@@ -267,22 +267,18 @@ def generate_message(words, member):
     return msg
 
 
-def get_next_member(current_time, recent_msgs):
-    """
-    Select the next sender weighted by freq_weight * hour_weight.
-    Applies a FATIGUE PENALTY if a member has sent too many messages
-    in their personal fatigue window.
-    Applies a BACK-TO-BACK PENALTY to discourage same person sending repeatedly.
-    """
+def get_next_member(current_time, recent_msgs, last_message_time=None):  # ← add param
     hour = current_time.hour
 
-    # Find the most recent message timestamp across all members
     all_recent = [t for name in recent_msgs for t in recent_msgs[name]]
     last_ts = max(all_recent) if all_recent else None
 
-    # ADD HERE — before loop
     cutoff_10 = current_time - timedelta(minutes=10)
     recent_activity = sum(1 for name in recent_msgs for t in recent_msgs[name] if t >= cutoff_10)
+
+    silence_minutes = 0
+    if last_message_time is not None:
+        silence_minutes = (current_time - last_message_time).total_seconds() / 60
 
     weights = []
     for m in MEMBERS:
@@ -291,13 +287,15 @@ def get_next_member(current_time, recent_msgs):
         if m["traits"].get("hype", 0) > 0.7 and recent_activity >= 2:
             base *= 1.4
 
-        # Fatigue penalty — too many messages in their window
+        if silence_minutes >= 60:
+            cs = m["traits"].get("conversation_starter", 0)
+            base *= (1 + cs * 4)   # Joshmitha(0.95)→5x, Tanvi(0.5)→3x, Kavya(0.0)→1x
+
         cutoff = current_time - timedelta(minutes=m["window_minutes"])
         msgs_in_window = sum(1 for t in recent_msgs[m["name"]] if t >= cutoff)
         if msgs_in_window >= m["max_messages"]:
             base *= 0.05
 
-        # Back-to-back penalty — discourage same person sending consecutively
         if last_ts and recent_msgs[m["name"]] and recent_msgs[m["name"]][-1] == last_ts:
             base *= 0.4
 
@@ -309,7 +307,6 @@ def get_next_member(current_time, recent_msgs):
         combined = np.array([m["freq_weight"] for m in MEMBERS], dtype=float)
         total = combined.sum()
     return MEMBERS[int(np.random.choice(len(MEMBERS), p=combined / total))]
-
 
 def time_gap(current_time, member=None):
     """
@@ -349,36 +346,31 @@ def generate_chat(vocabulary_path, output_path="chat.txt"):
     end_time     = datetime(2024, 11, 20, 23, 59, 59)
 
     messages = []
-
-    silent_until = {m["name"]: datetime.min for m in MEMBERS}
-    recent_msgs  = {m["name"]: [] for m in MEMBERS}
+    silent_until    = {m["name"]: datetime.min for m in MEMBERS}
+    recent_msgs     = {m["name"]: [] for m in MEMBERS}
+    last_message_time = None                          
 
     while current_time <= end_time:
-
-        # Move clock FIRST at new hour, then pick member
-        # Fixes bug where member was chosen at old hour before a big time jump
         current_time = time_gap(current_time, None)
         if current_time > end_time:
             break
 
-        member = get_next_member(current_time, recent_msgs)
+        member = get_next_member(current_time, recent_msgs, last_message_time) 
 
-        # Respect post-streak silence (Ghoster goes dark after a burst)
         if current_time < silent_until[member["name"]]:
             continue
 
         ts = current_time.strftime("%d/%m/%y, %H:%M")
         messages.append(f"{ts} - {member['name']}: {generate_message(words, member)}")
         track_recent_messages(recent_msgs, member["name"], current_time)
+        last_message_time = current_time            
 
-        # Streak logic — rapid follow-ups in seconds
         if random.random() < member["streak_prob"]:
             streak_len = random.randint(member["min_streak"], member["max_streak"])
             for _ in range(streak_len):
                 current_time += timedelta(seconds=random.randint(5, 45))
                 if current_time > end_time:
                     break
-                # Respect silence even mid-streak
                 if current_time < silent_until[member["name"]]:
                     break
                 ts = current_time.strftime("%d/%m/%y, %H:%M")
@@ -386,18 +378,17 @@ def generate_chat(vocabulary_path, output_path="chat.txt"):
                     f"{ts} - {member['name']}: {generate_message(words, member)}"
                 )
                 track_recent_messages(recent_msgs, member["name"], current_time)
+                last_message_time = current_time    
 
-            # After the Ghoster's burst, enforce a hard silence window
             if member["post_streak_silence"]:
                 lo, hi = member["post_streak_silence"]
                 blackout_minutes = random.randint(lo, hi)
-                silent_until[member["name"]] = current_time + timedelta(
-                    minutes=blackout_minutes
-                )
+                silent_until[member["name"]] = current_time + timedelta(minutes=blackout_minutes)
 
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write('\n'.join(messages))
     print(f"Generated {len(messages)} messages : {output_path}")
+       
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
