@@ -280,9 +280,16 @@ def get_next_member(current_time, recent_msgs):
     all_recent = [t for name in recent_msgs for t in recent_msgs[name]]
     last_ts = max(all_recent) if all_recent else None
 
+    # ADD HERE — before loop
+    cutoff_10 = current_time - timedelta(minutes=10)
+    recent_activity = sum(1 for name in recent_msgs for t in recent_msgs[name] if t >= cutoff_10)
+
     weights = []
     for m in MEMBERS:
         base = m["freq_weight"] * m["hour_weights"][hour]
+
+        if m["traits"].get("hype", 0) > 0.7 and recent_activity >= 2:
+            base *= 1.4
 
         # Fatigue penalty — too many messages in their window
         cutoff = current_time - timedelta(minutes=m["window_minutes"])
