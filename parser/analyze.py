@@ -317,8 +317,7 @@ def hype_person():
     for name in times:
         t=times[name]
         avgs[name]=round(sum(t)/len(t), 2) if t else None
-    winner=min((n for n in avgs if avgs[n] is not None), key=lambda n: avgs[n])
-    return {"winner": winner, "avg_reply_minutes": avgs[winner], "per_person": avgs}
+    return avgs
 hype=hype_person()
 # print(f"the hype person is {hype}")
 
@@ -366,8 +365,7 @@ def conversation_killer():
         total=msg_counts[name]
         kills=kill_counts[name]
         per_person[name]={"kills": kills, "total": total, "score": round((kills/total)*100, 2) if total>0 else 0.0}
-    winner=max(per_person, key=lambda x: per_person[x]["score"])
-    return {"winner": winner, "winner_score": per_person[winner]["score"], "per_person": per_person}
+    return per_person
 killer=conversation_killer()
 # print(f"the conversation killer is {killer}")
 
