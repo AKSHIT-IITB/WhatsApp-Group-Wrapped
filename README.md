@@ -43,6 +43,12 @@ python parser/analyze.py chat.txt
 - Reads `chat.txt`
 - Outputs `data.json` with all statistics
 
+### Step 3 — Open the slideshow
+
+Open `web/index.html` in any browser. No server needed. The page reads `data.json` from a relative path so it works on any machine without changes.
+
+---
+
 ## Dependencies
 
 ```bash
@@ -59,6 +65,8 @@ pip install emoji numpy
 ---
 
 ## data.json Schema
+
+The schema is split into two parts. Group level statistics have one value for the whole chat. Per person statistics are dictionaries keyed by member name.
 
 ```json
 {
@@ -148,3 +156,25 @@ pip install emoji numpy
 | 10 | `hype_person` | Average minutes each person takes to reply to others (lower = more hype) |
 | 11 ⭐ | `conversation_killer` | % of your messages followed by 60+ min of silence — your kill score |
 
+---
+
+## Definition Choices
+
+
+**What counts as a direct reply**
+
+Message B is a direct reply to message A if it is sent by a different person and arrives within 10 minutes. Anything beyond 10 minutes is likely part of a different exchange and should not count.
+
+**What counts as a long silence for conversation_starter**
+
+We used 60 minutes. Shorter gaps happen naturally during class or meals and do not really mean the conversation died. 60 minutes felt like the point where someone actually has to make an effort to bring the chat back to life.
+
+**What makes a day busy**
+
+Whichever day had the most messages total.
+
+---
+
+## Custom Statistic
+
+`conversation_killer` tracks what percentage of your messages are the last message before a 60 minute silence. The score is kills divided by total messages times 100. Most tools show you who starts conversations but nobody ever looks at who ends them. This stat fills that gap and pairs nicely with conversation_starter to show both ends of the dynamic. The full logic with comments is in `parser/analyze.py`.
