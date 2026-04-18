@@ -289,7 +289,7 @@ def get_next_member(current_time, recent_msgs, last_message_time=None):  # ← a
 
         if silence_minutes >= 60:
             cs = m["traits"].get("conversation_starter", 0)
-            base *= (1 + cs * 4)   # Joshmitha(0.95)→5x, Tanvi(0.5)→3x, Kavya(0.0)→1x
+            base *= (1 + cs * 12)   
 
         cutoff = current_time - timedelta(minutes=m["window_minutes"])
         msgs_in_window = sum(1 for t in recent_msgs[m["name"]] if t >= cutoff)

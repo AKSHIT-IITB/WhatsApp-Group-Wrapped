@@ -1,0 +1,804 @@
+{
+  "total_messages_group": 3825,
+  "stats": {
+    "total_messages": {
+      "Aryan": 1721,
+      "Akshit": 428,
+      "Yash": 248,
+      "Shreya": 75,
+      "Dev": 264,
+      "Kavya": 15,
+      "Joshmitha": 391,
+      "Tanvi": 683
+    },
+    "word_count": {
+      "Aryan": 6834,
+      "Akshit": 2824,
+      "Yash": 285,
+      "Shreya": 3451,
+      "Dev": 2024,
+      "Kavya": 42,
+      "Joshmitha": 4708,
+      "Tanvi": 7788
+    },
+    "night_owl": {
+      "Aryan": 149,
+      "Akshit": 242,
+      "Yash": 0,
+      "Shreya": 0,
+      "Dev": 0,
+      "Kavya": 0,
+      "Joshmitha": 7,
+      "Tanvi": 72
+    },
+    "ghost": {
+      "ghosted_counts": {
+        "Aryan": 233,
+        "Akshit": 104,
+        "Yash": 92,
+        "Shreya": 32,
+        "Dev": 26,
+        "Kavya": 5,
+        "Joshmitha": 139,
+        "Tanvi": 173
+      },
+      "msg_counts": {
+        "Aryan": 1721,
+        "Akshit": 428,
+        "Yash": 248,
+        "Shreya": 75,
+        "Dev": 264,
+        "Kavya": 15,
+        "Joshmitha": 391,
+        "Tanvi": 683
+      },
+      "ghost_percentage": {
+        "Aryan": 13.54,
+        "Akshit": 24.3,
+        "Yash": 37.1,
+        "Shreya": 42.67,
+        "Dev": 9.85,
+        "Kavya": 33.33,
+        "Joshmitha": 35.55,
+        "Tanvi": 25.33
+      }
+    },
+    "conversation_starter": {
+      "Aryan": 18,
+      "Akshit": 4,
+      "Yash": 1,
+      "Shreya": 1,
+      "Dev": 1,
+      "Kavya": 0,
+      "Joshmitha": 20,
+      "Tanvi": 16
+    },
+    "most_used_emoji": {
+      "Aryan": [
+        [
+          "😭",
+          42
+        ],
+        [
+          "⚡",
+          37
+        ],
+        [
+          "🌍",
+          36
+        ]
+      ],
+      "Akshit": [
+        [
+          "😢",
+          16
+        ],
+        [
+          "🥀",
+          15
+        ],
+        [
+          "🌍",
+          15
+        ]
+      ],
+      "Yash": [
+        [
+          "😍",
+          4
+        ],
+        [
+          "👍",
+          3
+        ],
+        [
+          "😀",
+          3
+        ]
+      ],
+      "Shreya": [
+        [
+          "👍",
+          6
+        ],
+        [
+          "💡",
+          5
+        ],
+        [
+          "😭",
+          5
+        ]
+      ],
+      "Dev": [
+        [
+          "🤡",
+          5
+        ],
+        [
+          "😀",
+          3
+        ],
+        [
+          "🤔",
+          3
+        ]
+      ],
+      "Kavya": [
+        [
+          "🥲",
+          2
+        ],
+        [
+          "😎",
+          1
+        ],
+        [
+          "😭",
+          1
+        ]
+      ],
+      "Joshmitha": [
+        [
+          "👍",
+          20
+        ],
+        [
+          "😀",
+          20
+        ],
+        [
+          "😍",
+          19
+        ]
+      ],
+      "Tanvi": [
+        [
+          "💡",
+          84
+        ],
+        [
+          "🥀",
+          83
+        ],
+        [
+          "🌍",
+          78
+        ]
+      ]
+    },
+    "overall_emojis": [
+      [
+        "👍",
+        399
+      ],
+      [
+        "😂",
+        377
+      ],
+      [
+        "😭",
+        242
+      ],
+      [
+        "🌍",
+        151
+      ],
+      [
+        "🥀",
+        148
+      ],
+      [
+        "💡",
+        148
+      ],
+      [
+        "🤔",
+        136
+      ],
+      [
+        "🚀",
+        133
+      ],
+      [
+        "🤡",
+        131
+      ],
+      [
+        "😎",
+        131
+      ],
+      [
+        "📚",
+        130
+      ],
+      [
+        "😀",
+        130
+      ],
+      [
+        "🤣",
+        127
+      ],
+      [
+        "🧠",
+        126
+      ],
+      [
+        "⚡",
+        122
+      ],
+      [
+        "🎯",
+        121
+      ],
+      [
+        "🔥",
+        120
+      ],
+      [
+        "🥲",
+        119
+      ],
+      [
+        "😍",
+        118
+      ],
+      [
+        "🥺",
+        118
+      ],
+      [
+        "😢",
+        114
+      ],
+      [
+        "🎉",
+        110
+      ],
+      [
+        "💀",
+        110
+      ]
+    ],
+    "busiest_day": [
+      "09/08/24",
+      188
+    ],
+    "longest_silence": {
+      "hours": 47.75,
+      "days": 1.99,
+      "start": "16/09/24 07:11",
+      "end": "18/09/24 06:56"
+    },
+    "avg_response_time": {
+      "Aryan": 11.0,
+      "Akshit": 11.0,
+      "Yash": 11.0,
+      "Shreya": 10.0,
+      "Dev": 11.0,
+      "Kavya": 8.0,
+      "Joshmitha": 11.0,
+      "Tanvi": 11.0
+    },
+    "hype_person": {
+      "Aryan": 15.84,
+      "Akshit": 17.47,
+      "Yash": 14.2,
+      "Shreya": 15.98,
+      "Dev": 14.38,
+      "Kavya": 13.14,
+      "Joshmitha": 15.56,
+      "Tanvi": 14.09
+    },
+    "conversation_killer": {
+      "Aryan": {
+        "kills": 32,
+        "total": 1721,
+        "score": 1.86
+      },
+      "Akshit": {
+        "kills": 27,
+        "total": 428,
+        "score": 6.31
+      },
+      "Yash": {
+        "kills": 8,
+        "total": 248,
+        "score": 3.23
+      },
+      "Shreya": {
+        "kills": 3,
+        "total": 75,
+        "score": 4.0
+      },
+      "Dev": {
+        "kills": 6,
+        "total": 264,
+        "score": 2.27
+      },
+      "Kavya": {
+        "kills": 1,
+        "total": 15,
+        "score": 6.67
+      },
+      "Joshmitha": {
+        "kills": 23,
+        "total": 391,
+        "score": 5.88
+      },
+      "Tanvi": {
+        "kills": 19,
+        "total": 683,
+        "score": 2.78
+      }
+    }
+  },
+  "derived": {
+    "sorted": {
+      "total_messages": [
+        [
+          "Aryan",
+          1721
+        ],
+        [
+          "Tanvi",
+          683
+        ],
+        [
+          "Akshit",
+          428
+        ],
+        [
+          "Joshmitha",
+          391
+        ],
+        [
+          "Dev",
+          264
+        ],
+        [
+          "Yash",
+          248
+        ],
+        [
+          "Shreya",
+          75
+        ],
+        [
+          "Kavya",
+          15
+        ]
+      ],
+      "word_count": [
+        [
+          "Tanvi",
+          7788
+        ],
+        [
+          "Aryan",
+          6834
+        ],
+        [
+          "Joshmitha",
+          4708
+        ],
+        [
+          "Shreya",
+          3451
+        ],
+        [
+          "Akshit",
+          2824
+        ],
+        [
+          "Dev",
+          2024
+        ],
+        [
+          "Yash",
+          285
+        ],
+        [
+          "Kavya",
+          42
+        ]
+      ],
+      "night_owl": [
+        [
+          "Akshit",
+          242
+        ],
+        [
+          "Aryan",
+          149
+        ],
+        [
+          "Tanvi",
+          72
+        ],
+        [
+          "Joshmitha",
+          7
+        ],
+        [
+          "Yash",
+          0
+        ],
+        [
+          "Shreya",
+          0
+        ],
+        [
+          "Dev",
+          0
+        ],
+        [
+          "Kavya",
+          0
+        ]
+      ],
+      "ghost_percentage": [
+        [
+          "Shreya",
+          42.67
+        ],
+        [
+          "Yash",
+          37.1
+        ],
+        [
+          "Joshmitha",
+          35.55
+        ],
+        [
+          "Kavya",
+          33.33
+        ],
+        [
+          "Tanvi",
+          25.33
+        ],
+        [
+          "Akshit",
+          24.3
+        ],
+        [
+          "Aryan",
+          13.54
+        ],
+        [
+          "Dev",
+          9.85
+        ]
+      ],
+      "conversation_starter": [
+        [
+          "Joshmitha",
+          20
+        ],
+        [
+          "Aryan",
+          18
+        ],
+        [
+          "Tanvi",
+          16
+        ],
+        [
+          "Akshit",
+          4
+        ],
+        [
+          "Yash",
+          1
+        ],
+        [
+          "Shreya",
+          1
+        ],
+        [
+          "Dev",
+          1
+        ],
+        [
+          "Kavya",
+          0
+        ]
+      ],
+      "hype_person": [
+        [
+          "Kavya",
+          13.14
+        ],
+        [
+          "Tanvi",
+          14.09
+        ],
+        [
+          "Yash",
+          14.2
+        ],
+        [
+          "Dev",
+          14.38
+        ],
+        [
+          "Joshmitha",
+          15.56
+        ],
+        [
+          "Aryan",
+          15.84
+        ],
+        [
+          "Shreya",
+          15.98
+        ],
+        [
+          "Akshit",
+          17.47
+        ]
+      ],
+      "conversation_killer": [
+        [
+          "Kavya",
+          {
+            "kills": 1,
+            "total": 15,
+            "score": 6.67
+          }
+        ],
+        [
+          "Akshit",
+          {
+            "kills": 27,
+            "total": 428,
+            "score": 6.31
+          }
+        ],
+        [
+          "Joshmitha",
+          {
+            "kills": 23,
+            "total": 391,
+            "score": 5.88
+          }
+        ],
+        [
+          "Shreya",
+          {
+            "kills": 3,
+            "total": 75,
+            "score": 4.0
+          }
+        ],
+        [
+          "Yash",
+          {
+            "kills": 8,
+            "total": 248,
+            "score": 3.23
+          }
+        ],
+        [
+          "Tanvi",
+          {
+            "kills": 19,
+            "total": 683,
+            "score": 2.78
+          }
+        ],
+        [
+          "Dev",
+          {
+            "kills": 6,
+            "total": 264,
+            "score": 2.27
+          }
+        ],
+        [
+          "Aryan",
+          {
+            "kills": 32,
+            "total": 1721,
+            "score": 1.86
+          }
+        ]
+      ]
+    },
+    "pct": {
+      "total_messages": {
+        "Aryan": 100.0,
+        "Akshit": 24.9,
+        "Yash": 14.4,
+        "Shreya": 4.4,
+        "Dev": 15.3,
+        "Kavya": 0.9,
+        "Joshmitha": 22.7,
+        "Tanvi": 39.7
+      },
+      "word_count": {
+        "Aryan": 87.8,
+        "Akshit": 36.3,
+        "Yash": 3.7,
+        "Shreya": 44.3,
+        "Dev": 26.0,
+        "Kavya": 0.5,
+        "Joshmitha": 60.5,
+        "Tanvi": 100.0
+      },
+      "night_owl": {
+        "Aryan": 61.6,
+        "Akshit": 100.0,
+        "Yash": 0.0,
+        "Shreya": 0.0,
+        "Dev": 0.0,
+        "Kavya": 0.0,
+        "Joshmitha": 2.9,
+        "Tanvi": 29.8
+      },
+      "ghost_percentage": {
+        "Aryan": 31.7,
+        "Akshit": 56.9,
+        "Yash": 86.9,
+        "Shreya": 100.0,
+        "Dev": 23.1,
+        "Kavya": 78.1,
+        "Joshmitha": 83.3,
+        "Tanvi": 59.4
+      },
+      "conversation_starter": {
+        "Aryan": 90.0,
+        "Akshit": 20.0,
+        "Yash": 5.0,
+        "Shreya": 5.0,
+        "Dev": 5.0,
+        "Kavya": 0.0,
+        "Joshmitha": 100.0,
+        "Tanvi": 80.0
+      },
+      "hype_person": {
+        "Aryan": 90.7,
+        "Akshit": 100.0,
+        "Yash": 81.3,
+        "Shreya": 91.5,
+        "Dev": 82.3,
+        "Kavya": 75.2,
+        "Joshmitha": 89.1,
+        "Tanvi": 80.7
+      }
+    },
+    "words_per_message": {
+      "Aryan": 4.0,
+      "Akshit": 6.6,
+      "Yash": 1.1,
+      "Shreya": 46.0,
+      "Dev": 7.7,
+      "Kavya": 2.8,
+      "Joshmitha": 12.0,
+      "Tanvi": 11.4
+    },
+    "active_member_threshold": 516,
+    "personality": {
+      "Aryan": [
+        {
+          "label": "The Chatterbox",
+          "emoji": "💬"
+        }
+      ],
+      "Akshit": [
+        {
+          "label": "The Night Owl",
+          "emoji": "🦉"
+        },
+        {
+          "label": "The Ghoster",
+          "emoji": "👻"
+        }
+      ],
+      "Yash": [
+        {
+          "label": "The Dry Texter",
+          "emoji": "🪨"
+        }
+      ],
+      "Shreya": [
+        {
+          "label": "The Essay Writer",
+          "emoji": "📝"
+        }
+      ],
+      "Dev": [
+        {
+          "label": "The Regular",
+          "emoji": "😎"
+        }
+      ],
+      "Kavya": [
+        {
+          "label": "The Lurker",
+          "emoji": "👁️"
+        }
+      ],
+      "Joshmitha": [
+        {
+          "label": "The Conversation Starter",
+          "emoji": "🚀"
+        }
+      ],
+      "Tanvi": [
+        {
+          "label": "Emoji Queen",
+          "emoji": "👑"
+        },
+        {
+          "label": "The Hype Person",
+          "emoji": "⚡"
+        }
+      ]
+    },
+    "ranks": {
+      "total_messages": {
+        "Aryan": 1,
+        "Tanvi": 2,
+        "Akshit": 3,
+        "Joshmitha": 4,
+        "Dev": 5,
+        "Yash": 6,
+        "Shreya": 7,
+        "Kavya": 8
+      },
+      "word_count": {
+        "Tanvi": 1,
+        "Aryan": 2,
+        "Joshmitha": 3,
+        "Shreya": 4,
+        "Akshit": 5,
+        "Dev": 6,
+        "Yash": 7,
+        "Kavya": 8
+      }
+    },
+    "response_normalized": {
+      "Aryan": 0.9967,
+      "Akshit": 0.9967,
+      "Yash": 0.9967,
+      "Shreya": 0.6645,
+      "Dev": 0.9967,
+      "Kavya": 0.0,
+      "Joshmitha": 0.9967,
+      "Tanvi": 0.9967
+    },
+    "response_bubble_size": {
+      "Aryan": 112,
+      "Akshit": 112,
+      "Yash": 112,
+      "Shreya": 97,
+      "Dev": 112,
+      "Kavya": 68,
+      "Joshmitha": 112,
+      "Tanvi": 112
+    }
+  }
+}

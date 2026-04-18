@@ -7,7 +7,7 @@ MEMBERS = ["Aryan", "Akshit", "Yash", "Shreya", "Dev", "Kavya", "Joshmitha", "Ta
 # -----------------------------------------------stat 1 -----------------------------------------------------------------
 # here we are fining the total no of messages 
 def total_messages():
-    f=open("chat.txt")
+    f=open("../generator/chat.txt")
     counts = {
         "Aryan" : 0,
         "Akshit" : 0 ,
@@ -27,7 +27,7 @@ def total_messages():
 # -----------------------------------------------stat 2 -----------------------------------------------------------------
 # word countn including the emoji (counting emoji as word)
 def word_count():
-    f=open("chat.txt")
+    f=open("../generator/chat.txt")
     count=0
     val=0
     counts = {
@@ -52,7 +52,7 @@ r=word_count()
 # -----------------------------------------------stat 3 -----------------------------------------------------------------
 # perosn who active at night time 
 def night_owl():
-    f = open("chat.txt")
+    f = open("../generator/chat.txt")
     counts_msgs_night = {
         "Aryan": 0,
         "Akshit": 0,
@@ -83,7 +83,7 @@ list=night_owl()
 
 # -----------------------------------------------stat 4 -----------------------------------------------------------------
 def ghost():
-    f = open("chat.txt")
+    f = open("../generator/chat.txt")
     # counts how many times no one replied to your message within 10 minutes
     ghosted_counts = {
         "Aryan": 0,
@@ -142,7 +142,7 @@ for person in msg:
 # -----------------------------------------------stat 5 -----------------------------------------------------------------
 
 def conversation_starter():
-    f = open("chat.txt")
+    f = open("../generator/chat.txt")
     starter_counts = {
         "Aryan": 0,
         "Akshit": 0,
@@ -180,7 +180,7 @@ starts=conversation_starter()
 
 # -----------------------------------------------stat 6 -----------------------------------------------------------------
 def most_used_emoji():
-    f=open("chat.txt")
+    f=open("../generator/chat.txt")
     emoji_counts = {
         "Aryan": {},
         "Akshit": {},
@@ -209,7 +209,7 @@ top_emojis=most_used_emoji()
 
 # -----------------------------------------------stat 7 --------------------------------------------------------------
 def busiest_day():
-    f=open("chat.txt")
+    f=open("../generator/chat.txt")
     count={}
     for line in f: 
         words=line.strip().split()
@@ -224,7 +224,7 @@ busyday=busiest_day()
 
 # -----------------------------------------------stat 8 -----------------------------------------------------------------
 def longest_silence():
-    f=open("chat.txt")
+    f=open("../generator/chat.txt")
     prev_dt=None
     max_gap=0
     gap_start=None
@@ -249,7 +249,7 @@ silence=longest_silence()
 # -----------------------------------------------stat 9 ----------------------------------------------------------------------
 # only counts if next message is from someone else within 60 min
 def avg_response_time():
-    f=open("chat.txt")
+    f=open("../generator/chat.txt")
     times={
         "Aryan": [],
         "Akshit": [],
@@ -288,7 +288,7 @@ response=avg_response_time()
 
 # -----------------------------------------------stat 10 -----------------------------------------------------------------
 def hype_person():
-    f=open("chat.txt")
+    f=open("../generator/chat.txt")
     times={
         "Aryan": [],
         "Akshit": [],
@@ -344,7 +344,7 @@ def conversation_killer():
         "Joshmitha": 0,
         "Tanvi": 0
     }
-    lines=open("chat.txt").readlines()
+    lines=open("../generator/chat.txt").readlines()
     for i in range(len(lines)):
         words=lines[i].strip().split()
         if len(words) < 4:
@@ -370,6 +370,57 @@ killer=conversation_killer()
 # print(f"the conversation killer is {killer}")
 
 
+
+# -----------------------------------------------ghoster score -----------------------------------------------------------------
+# Measures burst-then-vanish behaviour: high std-dev of gaps between your own consecutive messages.
+# Someone who sends 5 msgs in 30s then goes silent for 3h scores very high; someone active all day scores low.
+def ghoster_score():
+    from datetime import datetime
+    import math
+    lines = open("../generator/chat.txt").readlines()
+    own_gaps = {n: [] for n in MEMBERS}   # gaps (minutes) between consecutive messages by same person
+
+    prev_sender = None
+    prev_dt = None
+    for line in lines:
+        words = line.strip().split()
+        if len(words) < 4:
+            continue
+        sender = words[3][:-1]
+        if sender not in MEMBERS:
+            prev_sender = sender
+            prev_dt = None
+            continue
+        dt = datetime.strptime(f"{words[0][:-1]} {words[1]}", "%d/%m/%y %H:%M")
+        if prev_sender == sender and prev_dt is not None:
+            gap = (dt - prev_dt).total_seconds() / 60
+            own_gaps[sender].append(gap)
+        prev_sender = sender
+        prev_dt = dt
+
+    scores = {}
+    for name in MEMBERS:
+        gaps = own_gaps[name]
+        if len(gaps) < 5:
+            scores[name] = 0.0
+            continue
+        mean = sum(gaps) / len(gaps)
+        variance = sum((g - mean) ** 2 for g in gaps) / len(gaps)
+        scores[name] = round(math.sqrt(variance), 2)   # std-dev in minutes — higher = more bursty/ghosty
+    return scores
+
+def overall_emoji_count():
+    f=open("../generator/chat.txt", encoding="utf-8")
+    emoji_counts={}
+    for line in f: 
+        emojis=[c for c in line if c in emoji.EMOJI_DATA]
+        for e in emojis:
+            emoji_counts[e]=emoji_counts.get(e,0)+1 
+    f.close()
+    sorted_emojis=sorted(emoji_counts.items(),key=lambda x:x[1], reverse=True) 
+    return sorted_emojis
+
+
 total_msgs       = total_messages()
 words            = word_count()
 owls             = night_owl()
@@ -381,6 +432,8 @@ silence          = longest_silence()
 response         = avg_response_time()
 hype             = hype_person()
 killer           = conversation_killer()
+ghoster          = ghoster_score()
+overall_emojis = overall_emoji_count()
 
 # ghost_pct = (ghosted / msg_cnt) * 100
 ghost_pct = {}
@@ -389,6 +442,121 @@ for person in MEMBERS:
         ghost_pct[person] = round((ghosted[person] / msg_cnt[person]) * 100, 2)
     else:
         ghost_pct[person] = 0.0
+
+# -----------------------------------------------derived / pre-computed fields for JS ---------------------------------
+
+# sorted arrays (JS no longer needs to sort at render time)
+total_msgs_sorted   = sorted(total_msgs.items(),   key=lambda x: x[1], reverse=True)
+word_count_sorted   = sorted(words.items(),         key=lambda x: x[1], reverse=True)
+night_owl_sorted    = sorted(owls.items(),          key=lambda x: x[1], reverse=True)
+ghost_pct_sorted    = sorted(ghost_pct.items(),     key=lambda x: x[1], reverse=True)
+starters_sorted     = sorted(starters.items(),      key=lambda x: x[1], reverse=True)
+hype_sorted         = sorted([(k, v) for k, v in hype.items() if v is not None], key=lambda x: x[1])
+killer_sorted       = sorted(killer.items(),        key=lambda x: x[1]["score"], reverse=True)
+
+# bar chart percentages (JS no longer needs to compute val/max*100)
+_max_msgs   = total_msgs_sorted[0][1]
+_max_words  = word_count_sorted[0][1]
+_max_owls   = night_owl_sorted[0][1]
+_max_ghost  = ghost_pct_sorted[0][1]
+_max_starts = starters_sorted[0][1]
+_max_hype   = hype_sorted[-1][1]
+
+total_msgs_pct  = {n: round((v / _max_msgs)   * 100, 1) for n, v in total_msgs.items()}
+word_count_pct  = {n: round((v / _max_words)  * 100, 1) for n, v in words.items()}
+night_owl_pct   = {n: round((v / _max_owls)   * 100, 1) if _max_owls > 0 else 0.0 for n, v in owls.items()}
+ghost_pct_pct   = {n: round((v / _max_ghost)  * 100, 1) if _max_ghost > 0 else 0.0 for n, v in ghost_pct.items()}
+starters_pct    = {n: round((v / _max_starts) * 100, 1) if _max_starts > 0 else 0.0 for n, v in starters.items()}
+hype_pct        = {n: round((v / _max_hype)   * 100, 1) for n, v in hype.items() if v is not None}
+
+# avg response time normalization for bubble sizing (norm 0-1, and pixel size 68-112)
+_resp_vals  = [v for v in response.values() if v is not None]
+_resp_min   = min(_resp_vals) if _resp_vals else 0
+_resp_max   = max(_resp_vals) if _resp_vals else 1
+response_normalized = {}
+response_bubble_size = {}
+for name, val in response.items():
+    if val is not None:
+        norm = (val - _resp_min) / (_resp_max - _resp_min + 0.01)
+        response_normalized[name]   = round(norm, 4)
+        response_bubble_size[name]  = round(68 + norm * 44)
+    else:
+        response_normalized[name]   = None
+        response_bubble_size[name]  = None
+
+# words per message
+words_per_message = {
+    n: round(words[n] / total_msgs[n], 1) if total_msgs[n] > 0 else 0
+    for n in MEMBERS
+}
+
+# active member threshold (30% of max messages) used for hype/personality logic
+active_member_threshold = round(_max_msgs * 0.3)
+
+# personality labels — mirrors getPersonality() logic in app.js exactly
+_max_night    = max(owls.values())
+_max_wpm      = max(words_per_message.values())
+_max_starts_v = max(starters.values())
+_max_ghost_v  = max(ghost_pct.values())
+_max_killer_v = max(v["score"] for v in killer.values())
+_max_ghoster_v = max(ghoster.values())
+_min_msgs_v   = min(total_msgs.values())
+_active_hype  = [(n, v) for n, v in hype.items() if v is not None and total_msgs[n] >= active_member_threshold]
+_min_hype_v   = min(v for _, v in _active_hype) if _active_hype else None
+
+_min_wpm = min(words_per_message.values())
+
+# total emojis sent per person (sum of their top_emojis counts)
+_emoji_totals = {n: sum(c for _, c in top_emojis[n]) for n in MEMBERS}
+_max_emoji_total = max(_emoji_totals.values())
+
+_personality_map = {
+    "Chatterbox":          {"label": "The Chatterbox",           "emoji": "💬"},
+    "DryTexter":           {"label": "The Dry Texter",           "emoji": "🪨"},
+    "NightOwl":            {"label": "The Night Owl",            "emoji": "🦉"},
+    "EmojiQueen":          {"label": "Emoji Queen",              "emoji": "👑"},
+    "HypePerson":          {"label": "The Hype Person",          "emoji": "⚡"},
+    "EssayWriter":         {"label": "The Essay Writer",         "emoji": "📝"},
+    "ConversationStarter": {"label": "The Conversation Starter", "emoji": "🚀"},
+    "Ghost":               {"label": "The Ghoster",              "emoji": "👻"},
+    "Killer":              {"label": "The Killer",               "emoji": "💀"},
+    "Lurker":              {"label": "The Lurker",               "emoji": "👁️"},
+    "Regular":             {"label": "The Regular",              "emoji": "😎"},
+}
+
+# returns a list so dual-personality members (Tanvi) can have two badges
+def _get_personality(name):
+    labels = []
+    if total_msgs[name] == _max_msgs:
+        labels.append(_personality_map["Chatterbox"])
+    if words_per_message[name] == _min_wpm:
+        labels.append(_personality_map["DryTexter"])
+    if owls[name] == _max_night:
+        labels.append(_personality_map["NightOwl"])
+    if _emoji_totals[name] == _max_emoji_total:
+        labels.append(_personality_map["EmojiQueen"])
+    if (hype[name] is not None and total_msgs[name] >= active_member_threshold
+            and _min_hype_v is not None and abs(hype[name] - _min_hype_v) < 0.001):
+        labels.append(_personality_map["HypePerson"])
+    if words_per_message[name] == _max_wpm:
+        labels.append(_personality_map["EssayWriter"])
+    if starters[name] == _max_starts_v:
+        labels.append(_personality_map["ConversationStarter"])
+    if ghoster[name] == _max_ghoster_v:
+        labels.append(_personality_map["Ghost"])
+    if killer[name]["score"] == _max_killer_v:
+        labels.append(_personality_map["Lurker"])
+    return labels if labels else [_personality_map["Regular"]]
+
+personality = {name: _get_personality(name) for name in MEMBERS}
+
+# ranks (1-based) for each stat used in profile cards
+def _ranks(d, reverse=True):
+    sorted_items = sorted(d.items(), key=lambda x: x[1], reverse=reverse)
+    return {name: i + 1 for i, (name, _) in enumerate(sorted_items)}
+
+total_msgs_rank  = _ranks(total_msgs)
+word_count_rank  = _ranks(words)
 
 data = {
 
@@ -404,13 +572,45 @@ data = {
         },
         "conversation_starter": starters,
         "most_used_emoji":      top_emojis,
+        "overall_emojis":       overall_emojis,
         "busiest_day":          busy,
         "longest_silence":      silence,
         "avg_response_time":    response,
         "hype_person":          hype,
         "conversation_killer":  killer,
+    },
+
+    # ---- pre-computed fields ----
+    "derived": {
+        "sorted": {
+            "total_messages":        total_msgs_sorted,
+            "word_count":            word_count_sorted,
+            "night_owl":             night_owl_sorted,
+            "ghost_percentage":      ghost_pct_sorted,
+            "conversation_starter":  starters_sorted,
+            "hype_person":           hype_sorted,
+            "conversation_killer":   killer_sorted,
+        },
+        "pct": {
+            "total_messages":        total_msgs_pct,
+            "word_count":            word_count_pct,
+            "night_owl":             night_owl_pct,
+            "ghost_percentage":      ghost_pct_pct,
+            "conversation_starter":  starters_pct,
+            "hype_person":           hype_pct,
+        },
+        "words_per_message":         words_per_message,
+        "active_member_threshold":   active_member_threshold,
+        "personality":               personality,
+        "ranks": {
+            "total_messages":        total_msgs_rank,
+            "word_count":            word_count_rank,
+        },
+        "response_normalized":       response_normalized,
+        "response_bubble_size":      response_bubble_size,
     }
 }
+
 
 with open("data.json", "w", encoding="utf-8") as f:
     json.dump(data, f, ensure_ascii=False, indent=2)
