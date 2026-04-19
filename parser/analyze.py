@@ -1,13 +1,16 @@
 from datetime import datetime
-import emoji 
-import json 
+import emoji
+import json
+import sys
 
 MEMBERS = ["Aryan", "Akshit", "Yash", "Shreya", "Dev", "Kavya", "Joshmitha", "Tanvi"]
 
+CHAT_FILE = sys.argv[1] if len(sys.argv) > 1 else "chat.txt"
+
 # -----------------------------------------------stat 1 -----------------------------------------------------------------
-# here we are fining the total no of messages 
+# here we are fining the total no of messages
 def total_messages():
-    f=open("../generator/chat.txt")
+    f=open(CHAT_FILE, encoding='utf-8')
     counts = {
         "Aryan" : 0,
         "Akshit" : 0 ,
@@ -20,14 +23,17 @@ def total_messages():
     }
     for line in f:
         words=line.strip().split()
+        if len(words) < 4:
+            continue
         name=words[3][:-1]
-        counts[name]=counts[name]+1
+        if name in counts:
+            counts[name]=counts[name]+1
     return counts
 
 # -----------------------------------------------stat 2 -----------------------------------------------------------------
-# word countn including the emoji (counting emoji as word)
+# word count including the emoji (counting emoji as word)
 def word_count():
-    f=open("../generator/chat.txt")
+    f=open(CHAT_FILE, encoding='utf-8')
     count=0
     val=0
     counts = {
@@ -40,19 +46,22 @@ def word_count():
         "Joshmitha" : 0,
         "Tanvi" : 0
     }
-    for line in f: 
-        words=line.strip().split() 
+    for line in f:
+        words=line.strip().split()
+        if len(words) < 4:
+            continue
         count=len(words)-4
         name=words[3][:-1]
-        counts[name]= counts[name]+count 
+        if name in counts:
+            counts[name]= counts[name]+count
     return counts
 r=word_count()
 # print(f"word count is {r}")
 
 # -----------------------------------------------stat 3 -----------------------------------------------------------------
-# perosn who active at night time 
+# person who is active at night time (12am–4am)
 def night_owl():
-    f = open("../generator/chat.txt")
+    f = open(CHAT_FILE, encoding='utf-8')
     counts_msgs_night = {
         "Aryan": 0,
         "Akshit": 0,
@@ -83,54 +92,32 @@ list=night_owl()
 
 # -----------------------------------------------stat 4 -----------------------------------------------------------------
 def ghost():
-    f = open("../generator/chat.txt")
-    # counts how many times no one replied to your message within 10 minutes
-    ghosted_counts = {
-        "Aryan": 0,
-        "Akshit": 0,
-        "Yash": 0,
-        "Shreya": 0,
-        "Dev": 0,
-        "Kavya": 0,
-        "Joshmitha": 0,
-        "Tanvi": 0
-    }
-    # total messages each person sent
-    msg_counts = {
-        "Aryan": 0,
-        "Akshit": 0,
-        "Yash": 0,
-        "Shreya": 0,
-        "Dev": 0,
-        "Kavya": 0,
-        "Joshmitha": 0,
-        "Tanvi": 0
-    }
-    time_span = 10
+    f = open(CHAT_FILE, encoding='utf-8')
+    # A message is "ghosted" if the next message from someone else arrives 10+ min later.
+    # Definition: direct reply = next message from a different person within 10 minutes.
+    ghosted_counts = {n: 0 for n in MEMBERS}
+    msg_counts = {n: 0 for n in MEMBERS}
+    time_span = 10  # minutes
     prev_sender = None
-    prev_hour = None
-    prev_minute = None
+    prev_dt = None
     for line in f:
         words = line.strip().split()
         if len(words) < 4:
             continue
         sender = words[3][:-1]
-        if sender in msg_counts:
-            msg_counts[sender] = msg_counts[sender] + 1
-        time = words[1]
+        if sender not in MEMBERS:
+            continue
+        msg_counts[sender] += 1
         try:
-            hour = int(time.split(":")[0])
-            minute = int(time.split(":")[1])
+            dt = datetime.strptime(f"{words[0][:-1]} {words[1]}", "%d/%m/%y %H:%M")
         except:
             continue
-        if prev_sender is not None:
-            time_diff = (hour * 60 + minute) - (prev_hour * 60 + prev_minute)
-            if time_diff > time_span and sender != prev_sender:
-                if prev_sender in ghosted_counts:
-                    ghosted_counts[prev_sender] = ghosted_counts[prev_sender] + 1
+        if prev_sender is not None and sender != prev_sender:
+            time_diff = (dt - prev_dt).total_seconds() / 60
+            if time_diff > time_span:
+                ghosted_counts[prev_sender] += 1
         prev_sender = sender
-        prev_hour = hour
-        prev_minute = minute
+        prev_dt = dt
     f.close()
     return ghosted_counts, msg_counts
 ghosted, msg = ghost()
@@ -142,37 +129,27 @@ for person in msg:
 # -----------------------------------------------stat 5 -----------------------------------------------------------------
 
 def conversation_starter():
-    f = open("../generator/chat.txt")
-    starter_counts = {
-        "Aryan": 0,
-        "Akshit": 0,
-        "Yash": 0,
-        "Shreya": 0,
-        "Dev": 0,
-        "Kavya": 0,
-        "Joshmitha": 0,
-        "Tanvi": 0
-    }
-    prev_hour = None
-    prev_minute = None
+    f = open(CHAT_FILE, encoding='utf-8')
+    # Counts times a person sent the first message after a 60+ minute silence.
+    # Definition: long silence = gap of 60 minutes or more with no messages.
+    starter_counts = {n: 0 for n in MEMBERS}
+    prev_dt = None
     for line in f:
         words = line.strip().split()
         if len(words) < 4:
             continue
-        time = words[1]
         sender = words[3][:-1]
+        if sender not in MEMBERS:
+            continue
         try:
-            hour = int(time.split(":")[0])
-            minute = int(time.split(":")[1])
+            dt = datetime.strptime(f"{words[0][:-1]} {words[1]}", "%d/%m/%y %H:%M")
         except:
             continue
-        if prev_hour is not None:
-            time_diff = (hour * 60 + minute) - (prev_hour * 60 + prev_minute)
+        if prev_dt is not None:
+            time_diff = (dt - prev_dt).total_seconds() / 60
             if time_diff >= 60:
-                if sender in starter_counts:
-                    starter_counts[sender] = starter_counts[sender] + 1
-        prev_hour = hour
-        prev_minute = minute
+                starter_counts[sender] += 1
+        prev_dt = dt
     f.close()
     return starter_counts
 starts=conversation_starter()
@@ -180,7 +157,7 @@ starts=conversation_starter()
 
 # -----------------------------------------------stat 6 -----------------------------------------------------------------
 def most_used_emoji():
-    f=open("../generator/chat.txt")
+    f=open(CHAT_FILE, encoding='utf-8')
     emoji_counts = {
         "Aryan": {},
         "Akshit": {},
@@ -209,7 +186,7 @@ top_emojis=most_used_emoji()
 
 # -----------------------------------------------stat 7 --------------------------------------------------------------
 def busiest_day():
-    f=open("../generator/chat.txt")
+    f=open(CHAT_FILE, encoding='utf-8')
     count={}
     for line in f: 
         words=line.strip().split()
@@ -224,7 +201,7 @@ busyday=busiest_day()
 
 # -----------------------------------------------stat 8 -----------------------------------------------------------------
 def longest_silence():
-    f=open("../generator/chat.txt")
+    f=open(CHAT_FILE, encoding='utf-8')
     prev_dt=None
     max_gap=0
     gap_start=None
@@ -249,7 +226,7 @@ silence=longest_silence()
 # -----------------------------------------------stat 9 ----------------------------------------------------------------------
 # only counts if next message is from someone else within 60 min
 def avg_response_time():
-    f=open("../generator/chat.txt")
+    f=open(CHAT_FILE, encoding='utf-8')
     times={
         "Aryan": [],
         "Akshit": [],
@@ -288,7 +265,7 @@ response=avg_response_time()
 
 # -----------------------------------------------stat 10 -----------------------------------------------------------------
 def hype_person():
-    f=open("../generator/chat.txt")
+    f=open(CHAT_FILE, encoding='utf-8')
     times={
         "Aryan": [],
         "Akshit": [],
@@ -344,7 +321,7 @@ def conversation_killer():
         "Joshmitha": 0,
         "Tanvi": 0
     }
-    lines=open("../generator/chat.txt").readlines()
+    lines=open(CHAT_FILE, encoding='utf-8').readlines()
     for i in range(len(lines)):
         words=lines[i].strip().split()
         if len(words) < 4:
@@ -377,7 +354,7 @@ killer=conversation_killer()
 def ghoster_score():
     from datetime import datetime
     import math
-    lines = open("../generator/chat.txt").readlines()
+    lines = open(CHAT_FILE, encoding='utf-8').readlines()
     own_gaps = {n: [] for n in MEMBERS}   # gaps (minutes) between consecutive messages by same person
 
     prev_sender = None
@@ -410,7 +387,7 @@ def ghoster_score():
     return scores
 
 def overall_emoji_count():
-    f=open("../generator/chat.txt", encoding="utf-8")
+    f=open(CHAT_FILE, encoding='utf-8')
     emoji_counts={}
     for line in f: 
         emojis=[c for c in line if c in emoji.EMOJI_DATA]
@@ -544,8 +521,10 @@ def _get_personality(name):
         labels.append(_personality_map["ConversationStarter"])
     if ghoster[name] == _max_ghoster_v:
         labels.append(_personality_map["Ghost"])
-    if killer[name]["score"] == _max_killer_v:
+    if total_msgs[name] == _min_msgs_v:
         labels.append(_personality_map["Lurker"])
+    if killer[name]["score"] == _max_killer_v:
+        labels.append(_personality_map["Killer"])
     return labels if labels else [_personality_map["Regular"]]
 
 personality = {name: _get_personality(name) for name in MEMBERS}
@@ -612,7 +591,7 @@ data = {
 }
 
 
-with open("data.json", "w", encoding="utf-8") as f:
+with open("web/data.json", "w", encoding="utf-8") as f:
     json.dump(data, f, ensure_ascii=False, indent=2)
 
-print("stats saved data.json")
+print("stats saved to web/data.json")
