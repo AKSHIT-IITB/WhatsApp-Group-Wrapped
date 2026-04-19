@@ -594,4 +594,4 @@ data = {
 with open("data.json", "w", encoding="utf-8") as f:
     json.dump(data, f, ensure_ascii=False, indent=2)
 
-print("stats saved to web/data.json")
+print("stats saved to data.json")
