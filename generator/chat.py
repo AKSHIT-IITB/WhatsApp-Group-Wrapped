@@ -1,7 +1,7 @@
 import random
 import numpy as np
 from datetime import datetime, timedelta
-import sys, os
+import sys
 
 def load_vocabulary(path):
     with open(path, 'r', encoding='utf-8') as f:
@@ -33,7 +33,7 @@ MEMBERS = [
             "essay": 0.1,
             "ghost": 0.0,
             "lurker": 0.0,
-            "conversation_starter": 0.6,
+            "conversation_starter": 0.15,
             "night_owl": 0.2
         },
         "freq_weight": 5.0,
@@ -221,7 +221,7 @@ MEMBERS = [
             "emoji": 0.95,
             "hype": 0.9,
             "chatterbox": 0.7,
-            "conversation_starter": 0.5,
+            "conversation_starter": 0.25,
             "essay": 0.2,
             "ghost": 0.1,
             "lurker": 0.0,
@@ -289,7 +289,7 @@ def get_next_member(current_time, recent_msgs, last_message_time=None):  # ← a
 
         if silence_minutes >= 60:
             cs = m["traits"].get("conversation_starter", 0)
-            base *= (1 + cs * 12)   
+            base *= (1 + cs * 15)
 
         cutoff = current_time - timedelta(minutes=m["window_minutes"])
         msgs_in_window = sum(1 for t in recent_msgs[m["name"]] if t >= cutoff)
