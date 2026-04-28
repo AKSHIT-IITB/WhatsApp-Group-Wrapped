@@ -21,7 +21,7 @@ var currentSlide = 0;
 
 // ---- boot ----
 async function boot() {
-  var res = await fetch("data.json");
+  var res = await fetch("../data.json");
   data = await res.json();
   slides = buildAllSlides(data);
   showSlide(0);
