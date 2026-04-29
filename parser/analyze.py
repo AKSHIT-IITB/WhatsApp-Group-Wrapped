@@ -2,13 +2,13 @@ from datetime import datetime
 import emoji
 import json
 import sys
-
+ 
 MEMBERS = ["Aryan", "Akshit", "Yash", "Shreya", "Dev", "Kavya", "Joshmitha", "Tanvi"]
 
 CHAT_FILE = sys.argv[1] if len(sys.argv) > 1 else "chat.txt"
 
 # -----------------------------------------------stat 1 -----------------------------------------------------------------
-# here we are fining the total no of messages
+# counting total messages sent by each person
 def total_messages():
     f=open(CHAT_FILE, encoding='utf-8')
     counts = {
@@ -34,8 +34,6 @@ def total_messages():
 # word count including the emoji (counting emoji as word)
 def word_count():
     f=open(CHAT_FILE, encoding='utf-8')
-    count=0
-    val=0
     counts = {
         "Aryan" : 0,
         "Akshit" : 0 ,
@@ -50,10 +48,9 @@ def word_count():
         words=line.strip().split()
         if len(words) < 4:
             continue
-        count=len(words)-4
         name=words[3][:-1]
         if name in counts:
-            counts[name]= counts[name]+count
+            counts[name]= counts[name]+(len(words)-4)
     return counts
 r=word_count()
 # print(f"word count is {r}")
@@ -158,24 +155,17 @@ starts=conversation_starter()
 # -----------------------------------------------stat 6 -----------------------------------------------------------------
 def most_used_emoji():
     f=open(CHAT_FILE, encoding='utf-8')
-    emoji_counts = {
-        "Aryan": {},
-        "Akshit": {},
-        "Yash": {},
-        "Shreya": {},
-        "Dev": {},
-        "Kavya": {},
-        "Joshmitha": {},
-        "Tanvi": {}
-    }
+    emoji_counts = {n: {} for n in MEMBERS}
     for line in f:
         words=line.strip().split()
+        if len(words) < 4:
+            continue
         name=words[3][:-1]
+        if name not in MEMBERS:
+            continue
         for word in words[4:]:
-            if emoji.is_emoji(word):
-                if word not in emoji_counts[name]:
-                    emoji_counts[name][word]=0
-                emoji_counts[name][word]=emoji_counts[name][word]+1
+            if word and all(c in emoji.EMOJI_DATA for c in word):
+                emoji_counts[name][word] = emoji_counts[name].get(word, 0) + 1
     result={}
     for name in emoji_counts:
         sorted_emojis=sorted(emoji_counts[name].items(), key=lambda x:x[1], reverse=True)
@@ -185,11 +175,15 @@ top_emojis=most_used_emoji()
 # print(f"most used emojis are {top_emojis}")
 
 # -----------------------------------------------stat 7 --------------------------------------------------------------
+# busy day definition: the day with the highest total message count across all members.
+# we chose total count because it is the most straightforward way to measure how active a day was.
 def busiest_day():
     f=open(CHAT_FILE, encoding='utf-8')
     count={}
-    for line in f: 
+    for line in f:
         words=line.strip().split()
+        if len(words) < 4:
+            continue
         date=words[0][:-1]
         if date not in count:
             count[date]=0
@@ -224,19 +218,13 @@ silence=longest_silence()
 # print(f"the longest silence is {silence}")
 
 # -----------------------------------------------stat 9 ----------------------------------------------------------------------
-# only counts if next message is from someone else within 60 min
+# measures how fast each person replies to others.
+# we add the gap to times[sender] (the person who replied), not times[prev_sender].
+# earlier it was times[prev_sender] by mistake which measured how fast others reply to you, not you to others.
+# we only count replies within 60 minutes. anything beyond that is probably a new conversation starting.
 def avg_response_time():
     f=open(CHAT_FILE, encoding='utf-8')
-    times={
-        "Aryan": [],
-        "Akshit": [],
-        "Yash": [],
-        "Shreya": [],
-        "Dev": [],
-        "Kavya": [],
-        "Joshmitha": [],
-        "Tanvi": []
-    }
+    times={n: [] for n in MEMBERS}
     prev_sender=None
     prev_dt=None
     for line in f:
@@ -244,11 +232,15 @@ def avg_response_time():
         if len(words) < 4:
             continue
         sender=words[3][:-1]
+        if sender not in times:
+            prev_sender=sender
+            prev_dt=None
+            continue
         dt=datetime.strptime(f"{words[0][:-1]} {words[1]}", "%d/%m/%y %H:%M")
         if prev_sender is not None and sender != prev_sender:
             gap=(dt-prev_dt).total_seconds()/60
             if gap<=60:
-                times[prev_sender].append(gap)
+                times[sender].append(gap)
         prev_sender=sender
         prev_dt=dt
     result={}
@@ -298,8 +290,12 @@ def hype_person():
 hype=hype_person()
 # print(f"the hype person is {hype}")
 
-# -----------------------------------------------stat 11 ----------------------------------------------------------------------
-# if no one replies within 60 min after your message, you get 1 kill point
+# -----------------------------------------------stat 11 (custom stat) --------------------------------------------------------
+# conversation killer: tracks who keeps ending the conversation.
+# if no one (including yourself) sends a message within 60 min after yours, that is a kill.
+# score = kills / total messages * 100
+# we added this because normal tools show who starts conversations but nobody looks at who ends them.
+# the 60 min threshold matches conversation_starter so the two stats work as a pair.
 def conversation_killer():
     kill_counts={
         "Aryan": 0,
@@ -329,13 +325,17 @@ def conversation_killer():
         sender=words[3][:-1]
         msg_counts[sender]=msg_counts[sender]+1
         dt=datetime.strptime(f"{words[0][:-1]} {words[1]}", "%d/%m/%y %H:%M")
+        killed = True  # default to kill if no valid next message
         if i+1 < len(lines):
             nxt=lines[i+1].strip().split()
-            next_dt=datetime.strptime(f"{nxt[0][:-1]} {nxt[1]}", "%d/%m/%y %H:%M")
-            gap=(next_dt-dt).total_seconds()/60
-            if gap>=60:
-                kill_counts[sender]=kill_counts[sender]+1
-        else:
+            if len(nxt) >= 4:
+                try:
+                    next_dt=datetime.strptime(f"{nxt[0][:-1]} {nxt[1]}", "%d/%m/%y %H:%M")
+                    gap=(next_dt-dt).total_seconds()/60
+                    killed = gap>=60
+                except:
+                    pass
+        if killed:
             kill_counts[sender]=kill_counts[sender]+1
     per_person={}
     for name in MEMBERS:
@@ -348,43 +348,69 @@ killer=conversation_killer()
 
 
 
-# -----------------------------------------------ghoster score -----------------------------------------------------------------
-# Measures burst-then-vanish behaviour: high std-dev of gaps between your own consecutive messages.
-# Someone who sends 5 msgs in 30s then goes silent for 3h scores very high; someone active all day scores low.
+# -----------------------------------------------ghoster score (custom stat) ---------------------------------------------------
+# measures the burst-then-vanish pattern: how often someone fires messages rapidly and then goes silent.
+# we collect each person's own message timestamps and look at consecutive gaps between them.
+# if a gap is <= 2 min (burst) followed by a gap >= 60 min (disappear), that counts as one burst-then-vanish.
+# score = (burst_then_vanish events / total messages) * 100
+# NOTE: we had a bug earlier where we only looked at back-to-back lines from the same sender.
+# that missed the post-streak silences because other members message in between dev's bursts.
+# fix: collect each user's own timestamps independently, then compute gaps from those.
 def ghoster_score():
-    from datetime import datetime
-    import math
     lines = open(CHAT_FILE, encoding='utf-8').readlines()
-    own_gaps = {n: [] for n in MEMBERS}   # gaps (minutes) between consecutive messages by same person
+    own_times = {n: [] for n in MEMBERS}
 
-    prev_sender = None
-    prev_dt = None
     for line in lines:
         words = line.strip().split()
         if len(words) < 4:
             continue
         sender = words[3][:-1]
         if sender not in MEMBERS:
-            prev_sender = sender
-            prev_dt = None
             continue
-        dt = datetime.strptime(f"{words[0][:-1]} {words[1]}", "%d/%m/%y %H:%M")
-        if prev_sender == sender and prev_dt is not None:
-            gap = (dt - prev_dt).total_seconds() / 60
-            own_gaps[sender].append(gap)
-        prev_sender = sender
-        prev_dt = dt
+        try:
+            dt = datetime.strptime(f"{words[0][:-1]} {words[1]}", "%d/%m/%y %H:%M")
+        except:
+            continue
+        own_times[sender].append(dt)
 
     scores = {}
+    # gap <= 2 min means the person is in a burst (rapid fire messages)
+    # gap >= 60 min means the person vanished after that message
+    BURST_GAP = 2
+    SILENCE_GAP = 60
+
     for name in MEMBERS:
-        gaps = own_gaps[name]
-        if len(gaps) < 5:
+        times = own_times[name]
+        if len(times) < 3:
             scores[name] = 0.0
             continue
-        mean = sum(gaps) / len(gaps)
-        variance = sum((g - mean) ** 2 for g in gaps) / len(gaps)
-        scores[name] = round(math.sqrt(variance), 2)   # std-dev in minutes — higher = more bursty/ghosty
+        gaps = [(times[i+1] - times[i]).total_seconds() / 60 for i in range(len(times) - 1)]
+        # count how many times a burst was immediately followed by a long silence
+        # this is the exact burst-then-vanish pattern that defines the Ghoster
+        burst_then_vanish = sum(
+            1 for i in range(len(gaps) - 1)
+            if gaps[i] <= BURST_GAP and gaps[i+1] >= SILENCE_GAP
+        )
+        scores[name] = round((burst_then_vanish / len(times)) * 100, 2)
     return scores
+
+def time_of_day_distribution():
+    f = open(CHAT_FILE, encoding='utf-8')
+    hours = {n: [0] * 24 for n in MEMBERS}
+    for line in f:
+        words = line.strip().split()
+        if len(words) < 4:
+            continue
+        name = words[3][:-1]
+        if name not in MEMBERS:
+            continue
+        try:
+            hour = int(words[1].split(":")[0])
+        except:
+            continue
+        hours[name][hour] += 1
+    f.close()
+    return hours
 
 def overall_emoji_count():
     f=open(CHAT_FILE, encoding='utf-8')
@@ -410,7 +436,8 @@ response         = avg_response_time()
 hype             = hype_person()
 killer           = conversation_killer()
 ghoster          = ghoster_score()
-overall_emojis = overall_emoji_count()
+overall_emojis   = overall_emoji_count()
+time_of_day_dist = time_of_day_distribution()
 
 # ghost_pct = (ghosted / msg_cnt) * 100
 ghost_pct = {}
@@ -483,8 +510,25 @@ _min_hype_v   = min(v for _, v in _active_hype) if _active_hype else None
 
 _min_wpm = min(words_per_message.values())
 
-# total emojis sent per person (sum of their top_emojis counts)
-_emoji_totals = {n: sum(c for _, c in top_emojis[n]) for n in MEMBERS}
+# total emojis sent per person — count all emoji tokens, not just top 3
+# using top-3 sum was wrong because it undercounts members who use many different emojis
+def _compute_emoji_totals():
+    f = open(CHAT_FILE, encoding='utf-8')
+    totals = {n: 0 for n in MEMBERS}
+    for line in f:
+        words = line.strip().split()
+        if len(words) < 4:
+            continue
+        name = words[3][:-1]
+        if name not in MEMBERS:
+            continue
+        for word in words[4:]:
+            if word and all(c in emoji.EMOJI_DATA for c in word):
+                totals[name] += 1
+    f.close()
+    return totals
+
+_emoji_totals = _compute_emoji_totals()
 _max_emoji_total = max(_emoji_totals.values())
 
 _personality_map = {
@@ -557,6 +601,7 @@ data = {
         "avg_response_time":    response,
         "hype_person":          hype,
         "conversation_killer":  killer,
+        "time_of_day":          time_of_day_dist,
     },
 
     # ---- pre-computed fields ----

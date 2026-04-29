@@ -20,8 +20,9 @@ var slides = [];
 var currentSlide = 0;
 
 // ---- boot ----
+// fetches data.json then builds all slides and shows the first one
 async function boot() {
-  var res = await fetch("data.json");
+  var res = await fetch("../data.json");
   data = await res.json();
   slides = buildAllSlides(data);
   showSlide(0);
@@ -107,6 +108,7 @@ function setupControls() {
 }
 
 // ---- animation helpers ----
+// these are called in onEnter so animations trigger after the slide becomes visible
 function animateBars(root) {
   var bars = root.querySelectorAll(".bar-fill[data-w]");
   for (var i = 0; i < bars.length; i++) {
@@ -498,6 +500,7 @@ function slideConversationKiller(d) {
   };
 }
 
+// profile picker lets user click a member to jump directly to their profile slide
 function slideProfilePicker() {
   return {
     color: "#d4b0ff",
@@ -558,6 +561,15 @@ function slideProfile(name, d) {
     return '<div class="personality-badge" style="background:' + color + '22;border-color:' + color + '44;"><span>' + p.emoji + '</span><span>' + p.label + '</span></div>';
   }).join("");
 
+  var hourData = (s.time_of_day && s.time_of_day[name]) ? s.time_of_day[name] : new Array(24).fill(0);
+  var maxHour = 1;
+  for (var h = 0; h < 24; h++) { if (hourData[h] > maxHour) maxHour = hourData[h]; }
+  var hourBarsHTML = "";
+  for (var h = 0; h < 24; h++) {
+    var pct = Math.round((hourData[h] / maxHour) * 100);
+    hourBarsHTML += '<div class="hour-bar" data-pct="' + pct + '" style="background:' + color + ';"></div>';
+  }
+
   return {
     color: color,
     getHTML: function() {
@@ -602,9 +614,29 @@ function slideProfile(name, d) {
               <span class="ps-wpm-val" style="color:${color};">${wpm}</span>
               <span class="ps-wpm-lbl">avg words per message</span>
             </div>
+            <div class="hour-chart">
+              <div class="hc-label">time of day activity</div>
+              <div class="hour-bars">${hourBarsHTML}</div>
+              <div class="hour-labels">
+                <span class="hour-label-text">12am</span>
+                <span class="hour-label-text">6am</span>
+                <span class="hour-label-text">12pm</span>
+                <span class="hour-label-text">6pm</span>
+                <span class="hour-label-text">11pm</span>
+              </div>
+            </div>
           </div>
         </div>
       `;
+    },
+    onEnter: function(root) {
+      var bars = root.querySelectorAll('.hour-bar[data-pct]');
+      setTimeout(function() {
+        for (var i = 0; i < bars.length; i++) {
+          var pct = parseFloat(bars[i].getAttribute('data-pct')) || 0;
+          bars[i].style.height = Math.round(pct * 0.44) + 'px';
+        }
+      }, 80);
     }
   };
 }

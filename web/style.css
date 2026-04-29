@@ -814,3 +814,47 @@ html, body {
   left: -80px;
   opacity: 0.1;
 }
+
+/* ─── HOUR DISTRIBUTION CHART ───────────── */
+.hour-chart {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+.hc-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--muted2);
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.hour-bars {
+  display: flex;
+  align-items: flex-end;
+  height: 44px;
+  gap: 2px;
+}
+
+.hour-bar {
+  flex: 1;
+  border-radius: 2px 2px 0 0;
+  height: 0;
+  min-height: 2px;
+  transition: height 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+  opacity: 0.85;
+}
+
+.hour-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+}
+
+.hour-label-text {
+  font-size: 9px;
+  color: var(--muted2);
+}
