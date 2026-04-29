@@ -2,6 +2,7 @@
 \usepackage{amsmath}
 \usepackage{url}
 \usepackage{geometry}
+\usepackage{listings}
 \geometry{a4paper, margin=1in}
 
 \title{\textbf{CS108 Project} \\ \large WhatsApp Group Wrapped}
@@ -11,6 +12,119 @@
 \begin{document}
 \maketitle
 
+% ---------------------------------------------------------------
+\section{Project Overview}
+
+WhatsApp Group Wrapped is a browser-based slideshow that shows social dynamics found in a WhatsApp group chat. The idea is similar to Spotify Wrapped. You pick a chat, run two Python scripts, and the browser shows animated slides with stats about each member.
+
+The project has three stages. First, \texttt{chat.py} generates a fake WhatsApp chat with eight members who each have a distinct personality. Second, \texttt{analyze.py} reads that chat and computes all the statistics. Third, the front end (\texttt{index.html}, \texttt{style.css}, \texttt{app.js}) reads \texttt{data.json} and shows the stats as a slideshow. The three stages are independent. The Python scripts communicate through plain text files.
+
+% ---------------------------------------------------------------
+\section{Code Structure}
+
+\begin{itemize}
+
+\item \textbf{generator/chat.py} \\
+Generates a synthetic WhatsApp chat and writes it to \texttt{chat.txt}. It defines eight member profiles, each with trait values, hour weights, streak settings, and a frequency weight. The main loop advances the clock, picks a member using weighted random selection, generates a message from the vocabulary, and handles streak behavior.
+
+\item \textbf{parser/analyze.py} \\
+Reads \texttt{chat.txt} and computes all 11 statistics. Each stat is a separate function. After computing everything, the script builds a single \texttt{data} dictionary and writes it to \texttt{data.json}.
+\item \textbf{web/index.html} \\
+The main HTML page. It loads \texttt{style.css} and \texttt{app.js}. The actual slide content is injected by JavaScript so the HTML file itself is mostly just a shell with a \texttt{\#slides} container and a navigation bar.
+
+\item \textbf{web/style.css} \\
+All visual styles. It defines CSS custom properties for each member's color, the slide transition animations, the bar chart and podium layout, the bubble chart, the hour-of-day bar chart on profile slides.
+
+\item \textbf{web/app.js} \\
+The slideshow engine. The \texttt{boot()} function fetches \texttt{data.json} and calls \texttt{buildAllSlides()} which returns an array of slide objects. Each slide object has a \texttt{getHTML()} function and an optional \texttt{onEnter()} function that runs animations after the slide becomes visible. Navigation works by keyboard arrows, swipe, and clicking the slide.
+
+\item \textbf{vocabulary.txt} \\
+A comma-separated list of words used by the chat generator to build messages. Words are picked randomly to form each message.
+
+\item \textbf{chat.txt} \\
+The generated chat file. Each line has the format \texttt{DD/MM/YY, HH:MM - Name: Message}. This file is the input to \texttt{analyze.py}.
+
+\item \textbf{data.json} \\
+The output of \texttt{analyze.py}. This file is fetched by the browser to render the slideshow. The schema is described in the next section.
+
+\end{itemize}
+
+% ---------------------------------------------------------------
+\section{data.json Schema}
+
+The file has two top-level keys. \texttt{total\_messages\_group} is a single integer for the whole chat. \texttt{stats} holds per-person dictionaries keyed by member name. There is also a \texttt{derived} block with pre-sorted arrays and bar chart percentages so the JavaScript does not have to compute them.
+
+\begin{verbatim}
+{
+  "total_messages_group": xxxx,
+  "stats": {
+    "total_messages":      { "Name": 120 },
+    "word_count":          { "Name": 843 },
+    "night_owl":           { "Name": 14 },
+    "ghost": {
+      "ghosted_counts":    { "Name": 20 },
+      "msg_counts":        { "Name": 120 },
+      "ghost_percentage":  { "Name": 16.67 }
+    },
+    "conversation_starter": { "Name": 8 },
+    "most_used_emoji":     { "Name": [["emoji", count], ...] },
+    "busiest_day":         ["22/07/24", 87],
+    "longest_silence":     { "hours": 14.5, "days": 0.6,
+                             "start": "...", "end": "..." },
+    "avg_response_time":   { "Name": 4.5 },
+    "hype_person":         { "Name": 2.3 },
+    "conversation_killer": { "Name": { "kills": 12,
+                                       "total": 120,
+                                       "score": 10.0 } },
+    "time_of_day":         { "Name": [0, 0, 1, 3, ...] }
+  }
+}
+\end{verbatim}
+
+The \texttt{time\_of\_day} field is a list of 24 integers, one per hour. It is used to draw the activity bar chart on each member's profile slide.
+
+% ---------------------------------------------------------------
+\section{Installation and Running}
+
+\subsection*{Dependencies}
+
+Install the two external Python packages before running anything:
+
+\begin{verbatim}
+pip install emoji numpy
+\end{verbatim}
+
+All other imports (\texttt{datetime}, \texttt{json}, \texttt{random}, \texttt{sys}) are part of the Python standard library.
+
+\subsection*{Step 1: Generate the chat}
+
+\begin{verbatim}
+python generator/chat.py vocabulary.txt
+\end{verbatim}
+
+This reads \texttt{vocabulary.txt} and writes \texttt{chat.txt}. The chat covers July 2024 to November 2024 and has around messages across the eight members.
+
+\subsection*{Step 2: Parse the chat}
+
+\begin{verbatim}
+python parser/analyze.py chat.txt
+\end{verbatim}
+
+This reads \texttt{chat.txt} and writes \texttt{data.json} with all computed statistics. A confirmation message is printed when done.
+
+\subsection*{Step 3: Start a local server}
+
+\begin{verbatim}
+python -m http.server 8000
+\end{verbatim}
+
+A local server is needed because the browser blocks \texttt{fetch()} on \texttt{file://} URLs. Run this command from the project root.
+
+\subsection*{Step 4: Open the slideshow}
+
+Open \texttt{http://localhost:8000/web/} in any browser. Use arrow keys, click, or swipe to move between slides.
+
+% ---------------------------------------------------------------
 \section{External Libraries Used}
 
 \begin{itemize}
@@ -31,11 +145,9 @@
 
     \item \textbf{sys} (analyze.py and chat.py) \\
     Used to read command line arguments like the vocabulary file path.
-
-    \item \textbf{math} (analyze.py) \\
-    Used to compute standard deviation in the ghoster score function.
 \end{itemize}
 
+% ---------------------------------------------------------------
 \section{Chat Generator (chat.py)}
 
 The file \texttt{chat.py} generates a fake WhatsApp group chat. It simulates eight users, each with a different personality. The chat runs from July 2024 to November 2024.
@@ -113,6 +225,7 @@ The chat is saved to \texttt{chat.txt}. Each line follows this format:
 
 The script takes the vocabulary file as a required command line argument and an optional output file path.
 
+% ---------------------------------------------------------------
 \section{Statistics Parser (analyze.py)}
 
 The file \texttt{analyze.py} reads \texttt{chat.txt} and computes all the statistics. The results are saved to \texttt{data.json} which the front end reads.
@@ -137,7 +250,7 @@ For each message, if the next message from a different user comes more than 10 m
 Counts how many times each user sent the first message after a silence of 60 or more minutes. The user with the most counts is the Conversation Starter.
 
 \item \textbf{Stat 6: Most Used Emojis} \\
-Finds the top 3 emojis used by each person. Each word in the message is checked using \texttt{emoji.EMOJI\_DATA} to handle cases like \texttt{😭💀} where two emojis are joined as one token.
+Finds the top 3 emojis used by each person. Each word in the message is checked using \texttt{emoji.EMOJI\_DATA} to handle cases like \texttt{����} where two emojis are joined as one token.
 
 \item \textbf{Stat 7: Busiest Day} \\
 Finds the date with the most total messages.
@@ -150,6 +263,10 @@ For each user, we collect all the cases where they replied to a different user w
 
 \item \textbf{Stat 10: Hype Person} \\
 Same idea as above but uses the mean instead of the median. The user with the lowest mean reply time is the Hype Person.
+
+\item \textbf{Stat 11: Conversation Killer} (\textit{custom}) \\
+For each message, we check if the next message in the chat arrives within 60 minutes. If not, that message is counted as a kill. The killer score is the number of kills divided by total messages sent, multiplied by 100. The user with the highest score is The Killer.
+
 
 \end{itemize}
 
@@ -167,15 +284,16 @@ After computing all stats, each user is given a personality label based on where
     \item \textbf{The Hype Person} gets the label if they have the lowest mean reply time among active members
     \item \textbf{The Conversation Starter} gets the label if they broke the most silences
     \item \textbf{The Ghoster} gets the label if they have the highest ghoster score
-    \item \textbf{The Killer} gets the label if they have the highest conversation killer score
-    \item \textbf{The Regular} is the fallback if none of the above apply
+    \item \textbf{The Conversation Killer} gets the label if they have the highest conversation killer score
+
 \end{itemize}
 
+% ---------------------------------------------------------------
 \section{Custom Statistics}
 
 \subsection*{Custom Stat 1: Conversation Killer}
 
-A message is called a conversation killer if no other user sends a message within 60 minutes after it. The killer score is:
+A message is called a conversation killer if no one sends a message within 60 minutes after it. The killer score is:
 
 \[
 \text{Killer Score} = \frac{\text{Number of killing messages}}{\text{Total messages sent}} \times 100
@@ -187,18 +305,17 @@ The 60 minute threshold also connects nicely with the conversation starter stat.
 
 \subsection*{Custom Stat 2: Ghoster Score}
 
-For each user we collect all the timestamps of their own messages. Then we compute the gaps between each consecutive pair of their own messages. The ghoster score is the standard deviation of these gaps:
+We define a burst-then-vanish event as a pair of consecutive gaps where the first gap is 2 minutes or less (the person is sending in a rapid burst) and the next gap is 60 minutes or more (the person has disappeared). The ghoster score counts how often this pattern happens:
 
 \[
-\text{Ghoster Score} = \sqrt{\frac{1}{N}\sum_{i=1}^{N}(g_i - \bar{g})^2}
+\text{Ghoster Score} = \frac{\text{burst-then-vanish events}}{\text{total messages}} \times 100
 \]
 
-where $g_i$ is each gap in minutes and $\bar{g}$ is the average gap.
+A high score means the user fires messages rapidly and then goes silent. Dev has \texttt{min\_streak = 4} and \texttt{post\_streak\_silence = (120, 480)} in his profile, so he always produces this pattern. Other members may burst occasionally but they do not vanish for hours afterwards, so their score stays low.
 
-A high standard deviation means the user sends messages in short bursts and then disappears for a long time. That is exactly what Dev does. A user who sends consistently throughout the day will have a low standard deviation.
+We collect each person's own message timestamps in a separate list and compute gaps from that list. This is important because other members send messages between Dev's burst, so looking only at consecutive same-sender lines in the file would miss the post-burst silence entirely.
 
-We initially only looked at gaps between back to back lines from the same sender in the file. This did not work because other members send messages in between Dev's burst, so the long silence after the burst was never captured. We fixed it by collecting each user's own message times separately and computing the gaps from those.
-
+% ---------------------------------------------------------------
 \section{Definition Choices}
 
 \begin{itemize}
@@ -215,15 +332,12 @@ We initially only looked at gaps between back to back lines from the same sender
 
 \end{itemize}
 
+% ---------------------------------------------------------------
 \section{Hurdles Faced and How We Overcame Them}
 
 \begin{itemize}
 
 \item \textbf{Building the front end from scratch.} We had no framework and had to figure out CSS animations, transitions, and touch events all separately. We looked up each thing on MDN and tested small pieces before putting them together.
-
-\item \textbf{Ghoster score was giving wrong results.} Dev was ranking last instead of first. The problem was that we only recorded a gap when two consecutive lines in the file were from the same sender. Since other members send messages between Dev's burst, the big silence after his streak was never recorded. We fixed this by storing each user's own message timestamps in a list and computing the gaps from that list directly.
-
-\item \textbf{Emoji detection was not working for joined emojis.} The function \texttt{emoji.is\_emoji()} returns false for a string like \texttt{😭💀} because it is two emojis joined together. We changed the check to \texttt{all(c in emoji.EMOJI\_DATA for c in word)} which works correctly for these cases.
 
 \item \textbf{Response time was measuring the wrong thing.} The code was adding the reply gap to \texttt{times[prev\_sender]} instead of \texttt{times[sender]}. This meant we were measuring how fast others reply to you, not how fast you reply to others. Changing the key fixed it.
 
@@ -231,6 +345,7 @@ We initially only looked at gaps between back to back lines from the same sender
 
 \end{itemize}
 
+% ---------------------------------------------------------------
 \section{What We Would Do Differently With 10 More Hours}
 
 \begin{itemize}
@@ -241,12 +356,11 @@ We initially only looked at gaps between back to back lines from the same sender
 
 \item \textbf{Make the layout work on mobile.} The current design is only tested on a laptop. On a phone some slides go off screen. We would add media queries to fix the layout for smaller screens.
 
-\item \textbf{Fix tie breaking for badges.} If two users have the same score they both get the badge. We would add a rule to break the tie, for example by looking at total messages as a secondary sort.
-
 \item \textbf{Single command to run everything.} Right now you need four separate commands to go from vocabulary file to browser. We would make one script that runs all the steps and opens the browser automatically.
 
 \end{itemize}
 
+% ---------------------------------------------------------------
 \begin{thebibliography}{9}
 
 \bibitem{mdn-css-custom-properties}
