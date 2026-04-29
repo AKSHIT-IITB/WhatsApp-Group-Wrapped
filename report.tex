@@ -1,220 +1,250 @@
 \documentclass{article}
 \usepackage{amsmath}
-\usepackage{url} 
+\usepackage{url}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\title{\textbf{CS108 Project} \\ \large WhatsApp Group Wrapped}
+\author{Joshmitha \quad 241098 \\ Akshit \quad 23b0945}
+\date{}
+
 \begin{document}
-\section{External libraries used}
-The following libraries were used in the project:
+\maketitle
+
+\section{External Libraries Used}
+
 \begin{itemize}
     \item \textbf{numpy} (chat.py) \\
-    used for weighted random selection of group members based on activity 
+    Used for weighted random selection of which group member sends the next message.
+
     \item \textbf{emoji} (analyze.py) \\
-    used to detect and extract emojis from message
+    Used to check whether a word in a message is an emoji. We use \texttt{EMOJI\_DATA} to handle cases where multiple emojis are joined together as one token.
+
     \item \textbf{datetime} (chat.py and analyze.py) \\
-    used for parsing timestamps and computing time difference between messages
+    Used to parse message timestamps and find the time difference between messages.
+
     \item \textbf{json} (analyze.py) \\
-    used to store computed statistics in structured json file 
-    \item \textbf{re} (analyze.py) \\
-    used for parsing chat messages using regular expressions
+    Used to write all the computed stats into \texttt{data.json}.
+
     \item \textbf{random} (chat.py) \\
-    used for generating random messages and probabilities
+    Used to generate random message lengths, streak lengths, and time gaps between messages.
+
     \item \textbf{sys} (analyze.py and chat.py) \\
-    used for command line argument parsing
+    Used to read command line arguments like the vocabulary file path.
+
+    \item \textbf{math} (analyze.py) \\
+    Used to compute standard deviation in the ghoster score function.
 \end{itemize}
 
 \section{Chat Generator (chat.py)}
 
-The file \texttt{chat.py} generates a WhatsApp group chat over a fixed time period. 
-The chat simulates multiple users with different personalities and behaviours, making the dataset realistic
+The file \texttt{chat.py} generates a fake WhatsApp group chat. It simulates eight users, each with a different personality. The chat runs from July 2024 to November 2024.
 
 \subsection*{1. Vocabulary-based Message Generation}
 
-The function \texttt{load\_vocabulary()} reads words from an external file (vocabulary.txt). 
-Messages are constructed by randomly selecting words from this vocabulary, ensuring variation in content
+The function \texttt{load\_vocabulary()} reads words from \texttt{vocabulary.txt}. Messages are made by randomly picking words from this list.
+
 \subsection*{2. Personality-driven Users}
 
-Each user is defined using a configuration dictionary containing:
+Each user is stored as a dictionary with the following fields:
+
 \begin{itemize}
     \item Name and personality type
-    \item Behaviour traits (chatterbox, hype, emoji, dry, essay, ghost, lurker, conversation\_starter, night\_owl)
-    \item Frequency weight (how often the user sends messages)
-    \item Hour-wise activity distribution (each user has a 24 hour activity profile that controls when they are active) (this ensures that some users are active during the data, while others are active at night)
-    \item Message length range
-    \item Response delay
-and using these configurations the messages are generated in the group chat \\
-Messages may include emojis based on a probability defined in user traits. 
-Some users (e.g., emoji-heavy personalities) include multiple emojis in a message
+    \item Trait values like chatterbox, hype, emoji, dry, essay, ghost, lurker, conversation\_starter, night\_owl
+    \item A frequency weight that controls how often this user is picked to send a message
+    \item A list of 24 hour weights that decide when the user is active during the day
+    \item Min and max message length
+    \item Response delay range
+    \item Streak probability and streak length range
+    \item Post streak silence (only for the Ghoster)
+\end{itemize}
+
+The eight members and their personalities are:
+
+\begin{itemize}
+    \item \textbf{Aryan} is The Chatterbox. He has a frequency weight of 5.0 which is five times higher than most others. He sends short messages of 2 to 5 words and is active throughout the day.
+
+    \item \textbf{Akshit} is The Night Owl. He is completely inactive from 7 AM to 4 PM. His activity starts picking up from 8 PM and peaks at 1 AM with the highest hour weight of 3.5. The night owl stat counts messages between midnight and 4 AM which is exactly when Akshit is most active.
+
+    \item \textbf{Yash} is The Dry Texter. His message length is 1 to 3 words and because his dry trait is 0.95, he always sends the minimum length. He rarely uses emojis.
+
+    \item \textbf{Shreya} is The Essay Writer. She sends messages of 20 to 60 words and sometimes even longer. Her response delay is 7 to 30 minutes so she is slow to reply. She does use emojis often.
+
+    \item \textbf{Dev} is The Ghoster. He has a streak probability of 0.70 and sends 4 to 7 messages in a burst. After each burst he is forced to stay silent for 2 to 8 hours using a post streak silence setting.
+
+    \item \textbf{Kavya} is The Lurker. Her frequency weight is 0.3 which is the lowest of all members. She sends very few messages and almost never starts a conversation.
+
+    \item \textbf{Joshmitha} is The Conversation Starter. Her conversation\_starter trait is 0.95 and she gets a large weight boost after a long silence. Her response delay is only 2 to 6 minutes.
+
+    \item \textbf{Tanvi} is The Emoji Queen and Hype Person. Her emoji trait is 0.95 so almost every message has emojis. Her response delay is 0 to 2 minutes which is the fastest of all members.
 \end{itemize}
 
 \subsection*{3. Weighted User Selection}
 
-The next user to send a message is selected using weighted random selection. 
-The weight depends on:
+The function \texttt{get\_next\_member()} picks who sends the next message using \texttt{numpy.random.choice} with weights. The weight for each user is calculated based on:
+
 \begin{itemize}
-    \item Frequency of the user
-    \item Time of day
-    \item Recent activity in the chat
+    \item Their base frequency weight multiplied by the current hour weight
+    \item A boost if they are a hype person and the chat is currently active
+    \item A large boost for conversation starters when there has been silence for 60 or more minutes
+    \item A reduction if the user has already sent too many messages in their time window
+    \item A reduction if this user sent the last message in the chat
 \end{itemize}
 
-\subsection*{4. Conversation Dynamics}
+\subsection*{4. Streak Behaviour}
 
-The program models realistic conversation behaviour:
+After a user sends a message, there is a chance they send more messages in a row. This is controlled by the streak probability. The number of messages in a streak is picked randomly between the min and max streak values. Dev has the highest streak probability of 0.70 and sends 4 to 7 messages per burst. After his streak, the \texttt{silent\_until} dictionary blocks him from sending for 2 to 8 hours.
+
+\subsection*{5. Time Gaps Between Messages}
+
+The function \texttt{time\_gap()} decides how much time passes between messages:
+
 \begin{itemize}
-    \item Active users are more likely to respond in busy chats
-    \item Conversation starters are more likely after long silence
-    \item Users who recently sent messages are less likely to speak again immediately
-\end{itemize}
-Users can send multiple messages consecutively:
-\begin{itemize}
-    \item Controlled by streak probability
-    \item Number of messages determined by minimum and maximum streak length
-\end{itemize}
-Some users become inactive after sending a burst of messages. 
-This is implemented using a silence period after a streak.
-
-\subsection*{5. Message Rate Limiting}
-
-Each user has a limit on how many messages they can send within a time window. 
-If the limit is exceeded, their probability of being selected is reduced.
-
-\subsection*{6. Time Gap Simulation}
-
-The function \texttt{time\_gap()} controls the delay between messages:
-\begin{itemize}
-    \item Short gaps (seconds) for quick replies
-    \item Medium gaps (minutes) for normal conversation
-    \item Long gaps (hours) to simulate silence
+    \item 5\% chance of a long gap of 1 to 48 hours
+    \item 25\% chance of a medium gap of 5 to 60 minutes
+    \item 70\% chance of a quick reply using the member's own response delay range
 \end{itemize}
 
-\subsection*{7. Recent Activity Tracking}
+\subsection*{6. Output}
 
-The program keeps track of recent messages for each user. 
-This helps:
-\begin{itemize}
-    \item Prevent the same user from dominating the chat
-    \item Maintain realistic turn-taking
-\end{itemize}
+The chat is saved to \texttt{chat.txt}. Each line follows this format:
 
-\subsection*{8. Timeline Simulation}
+\texttt{DD/MM/YY, HH:MM - Name: Message}
 
-The chat is generated over a fixed timeline:
-\begin{itemize}
-    \item Start date: July 2024
-    \item End date: November 2024
-\end{itemize}
-
-Time always moves forward during simulation.
-
-\subsection*{9. Output Format and command line interface}
-
-The generated chat is stored in \texttt{chat.txt}. 
-Each message follows the format:
-\texttt{DD/MM/YY, HH:MM - Name: Message} \\
-
-The script accepts input using command-line arguments:
-\begin{itemize}
-    \item Vocabulary file path (required)
-    \item Output file path (optional)
-\end{itemize}
+The script takes the vocabulary file as a required command line argument and an optional output file path.
 
 \section{Statistics Parser (analyze.py)}
 
-The file \texttt{analyze.py} processes the generated chat file and computes various statistics 
-to analyse user behaviour. The results are stored in a structured JSON file for use in the front-end.
-the input is the file generated by the chat.py and each line is parsed to extract date, time, sender, and message content
+The file \texttt{analyze.py} reads \texttt{chat.txt} and computes all the statistics. The results are saved to \texttt{data.json} which the front end reads.
 
-\subsection*{Global Statistics and Per-user Statistics}
+\subsection*{Statistics Implemented}
 
 \begin{itemize}
 
-\item \textbf{Total Messages in Group} \\
-Total number of messages sent across all users.
+\item \textbf{Stat 1: Total Messages} \\
+Counts how many messages each user sent.
 
-\item \textbf{Busiest Day} \\
-The date with the highest number of messages.
+\item \textbf{Stat 2: Word Count} \\
+Counts total words per user. Emojis that appear as separate tokens are also counted as words.
 
-\item \textbf{Longest Silence} \\
-The maximum time gap between two consecutive messages in the chat. 
-The result includes duration (in hours and days) and the start and end timestamps.
+\item \textbf{Stat 3: Night Owl} \\
+Counts messages sent by each user between midnight and 4 AM. The user with the highest count is the Night Owl.
 
-\item \textbf{Overall Emoji Usage} \\
-Counts all emojis used in the chat and identifies the most frequent ones.
+\item \textbf{Stat 4: Ghost Report} \\
+For each message, if the next message from a different user comes more than 10 minutes later, the original sender gets one ghost count. The ghost score is the percentage of that user's messages that were ghosted.
 
-\item \textbf{Most Used Emojis} \\
-Extracts the top 3 most frequently used emojis for each user.
+\item \textbf{Stat 5: Conversation Starter} \\
+Counts how many times each user sent the first message after a silence of 60 or more minutes. The user with the most counts is the Conversation Starter.
 
-\item \textbf{Total Messages} \\
-Counts the number of messages sent by each user.
+\item \textbf{Stat 6: Most Used Emojis} \\
+Finds the top 3 emojis used by each person. Each word in the message is checked using \texttt{emoji.EMOJI\_DATA} to handle cases like \texttt{😭💀} where two emojis are joined as one token.
 
-\item \textbf{Word Count} \\
-Counts the total number of words sent by each user. Emojis are also counted as words.
+\item \textbf{Stat 7: Busiest Day} \\
+Finds the date with the most total messages.
 
-\item \textbf{Average Response Time} \\
-Calculates the median time (in minutes) between a user's message and the next reply 
-from a different user, considering only responses within 60 minutes.
+\item \textbf{Stat 8: Longest Silence} \\
+Finds the biggest time gap between any two consecutive messages in the chat. It reports the gap in hours and days and also shows the start and end timestamps.
+
+\item \textbf{Stat 9: Average Response Time} \\
+For each user, we collect all the cases where they replied to a different user within 60 minutes. The median of those times is their response time. This tells us how fast each person actually replies.
+
+\item \textbf{Stat 10: Hype Person} \\
+Same idea as above but uses the mean instead of the median. The user with the lowest mean reply time is the Hype Person.
 
 \end{itemize}
 
-\subsection*{Personality Classification}
+\subsection*{Personality Labels}
 
-Based on the computed statistics, each user is assigned one or more personality labels:
+After computing all stats, each user is given a personality label based on where they rank:
 
 \begin{itemize}
-    \item \textbf{The Chatterbox} --- sends rapid-fire short messages all day long, 
-    with a significantly higher message count than any other member
-    \item \textbf{The Dry Texter} --- replies with the fewest words per message, 
-    rarely uses emojis, and never writes long responses
-    \item \textbf{The Essay Writer} --- sends the longest messages on average, 
-    slow to respond but writes detailed multi-sentence replies
-    \item \textbf{The Night Owl} --- largely inactive during the day, 
-    with the majority of messages sent between 12 AM and 4 AM
-    \item \textbf{The Lurker} --- present in the chat but rarely responds, 
-    with the lowest message count and near-zero conversation starts
-    \item \textbf{The Emoji Queen} --- includes emojis in almost every message, 
-    often using multiple emojis per message
-    \item \textbf{The Hype Person} --- fastest average reply time, 
-    more likely to respond when the chat is already active
-    \item \textbf{The Conversation Starter} --- most frequently sends the first message 
-    after a long silence, keeping the group chat alive
-    \item \textbf{The Ghoster} --- appears in bursts of consecutive messages 
-    then vanishes for hours, with enforced silence after each streak
+    \item \textbf{The Chatterbox} gets the label if they have the highest total message count
+    \item \textbf{The Dry Texter} gets the label if they have the lowest words per message
+    \item \textbf{The Essay Writer} gets the label if they have the highest words per message
+    \item \textbf{The Night Owl} gets the label if they have the most messages between midnight and 4 AM
+    \item \textbf{The Lurker} gets the label if they have the lowest total message count
+    \item \textbf{The Emoji Queen} gets the label if they used the most emojis overall
+    \item \textbf{The Hype Person} gets the label if they have the lowest mean reply time among active members
+    \item \textbf{The Conversation Starter} gets the label if they broke the most silences
+    \item \textbf{The Ghoster} gets the label if they have the highest ghoster score
+    \item \textbf{The Killer} gets the label if they have the highest conversation killer score
+    \item \textbf{The Regular} is the fallback if none of the above apply
 \end{itemize}
 
-\subsection*{Output}
+\section{Custom Statistics}
 
-All computed statistics are stored in \texttt{data.json} in a structured format, 
-which is later used by the front-end for visualisation.
+\subsection*{Custom Stat 1: Conversation Killer}
 
-\section{Custom Statistic: Conversation Killer}
-
-\subsection*{Definition}
-A message is considered a \textit{conversation killer} if no other user sends a message 
-within 60 minutes of it. The killer score for each user is computed as:
+A message is called a conversation killer if no other user sends a message within 60 minutes after it. The killer score is:
 
 \[
-\text{Killer Score} = \frac{\text{Number of conversation-killing messages}}{\text{Total messages sent}} \times 100
+\text{Killer Score} = \frac{\text{Number of killing messages}}{\text{Total messages sent}} \times 100
 \]
 
-\subsection*{Why This Statistic?}
-Standard analytics tools track message volume and response times, but none capture who 
-\textit{ends} conversations. A user can be highly active yet consistently send messages 
-that kill the chat's momentum. This metric surfaces that social dynamic.
+We added this because normal tools only tell you how many messages someone sent or how fast they reply. They do not tell you who keeps ending the conversation. Someone can be very active but still kill the chat often. This metric shows that.
 
-The 60-minute threshold is consistent with the conversation\_starter metric, 
-making the two a pair, a conversation killer triggers the silence that a 
-conversation starter later breaks.
+The 60 minute threshold also connects nicely with the conversation starter stat. The killer creates the silence and the starter breaks it.
 
-\subsection*{What the Data Reveals}
-Kavya has the highest killer score (6.67) despite sending only 15 messages, meaning the 
-rare times she speaks, the conversation tends to die. Aryan has the lowest score (1.86) 
-despite the most absolute kills (32), because his high message volume keeps the ratio small.
+\subsection*{Custom Stat 2: Ghoster Score}
+
+For each user we collect all the timestamps of their own messages. Then we compute the gaps between each consecutive pair of their own messages. The ghoster score is the standard deviation of these gaps:
+
+\[
+\text{Ghoster Score} = \sqrt{\frac{1}{N}\sum_{i=1}^{N}(g_i - \bar{g})^2}
+\]
+
+where $g_i$ is each gap in minutes and $\bar{g}$ is the average gap.
+
+A high standard deviation means the user sends messages in short bursts and then disappears for a long time. That is exactly what Dev does. A user who sends consistently throughout the day will have a low standard deviation.
+
+We initially only looked at gaps between back to back lines from the same sender in the file. This did not work because other members send messages in between Dev's burst, so the long silence after the burst was never captured. We fixed it by collecting each user's own message times separately and computing the gaps from those.
+
+\section{Definition Choices}
+
+\begin{itemize}
+
+\item \textbf{Direct reply.} We define a direct reply as the next message from a different user within 10 minutes. We picked 10 minutes because that matches the pace of an active chat. A longer window would not separate fast and slow responders very well.
+
+\item \textbf{Long silence.} A long silence is any gap of 60 or more minutes with no messages at all. We chose 60 minutes because it felt like a natural break in a day's conversation. Shorter values like 15 minutes created too many false starts.
+
+\item \textbf{Busy day.} The busiest day is simply the day with the most total messages. We thought about measuring message density per hour but total count felt more natural and easier to understand.
+
+\item \textbf{Response time window.} We only count a reply if it comes within 60 minutes. Anything longer is probably a new conversation and not a direct response. This also stops one overnight silence from pulling the median to a very high value.
+
+\item \textbf{Ghost percentage window.} A message is ghosted if no different user replies within 10 minutes. This matches our direct reply definition. Each message gets a yes or no and the ghost percentage is how many of the user's messages got a no.
+
+\end{itemize}
 
 \section{Hurdles Faced and How We Overcame Them}
+
 \begin{itemize}
-    \item  One of the more time-consuming challenges was building the front-end slideshow from scratch 
-.since we had to research and piece together individual 
-CSS and JS techniques from multiple sources covering custom properties, animations, 
-transitions, and touch events. 
-This made the front-end significantly more time-intensive than anticipated.
+
+\item \textbf{Building the front end from scratch.} We had no framework and had to figure out CSS animations, transitions, and touch events all separately. We looked up each thing on MDN and tested small pieces before putting them together.
+
+\item \textbf{Ghoster score was giving wrong results.} Dev was ranking last instead of first. The problem was that we only recorded a gap when two consecutive lines in the file were from the same sender. Since other members send messages between Dev's burst, the big silence after his streak was never recorded. We fixed this by storing each user's own message timestamps in a list and computing the gaps from that list directly.
+
+\item \textbf{Emoji detection was not working for joined emojis.} The function \texttt{emoji.is\_emoji()} returns false for a string like \texttt{😭💀} because it is two emojis joined together. We changed the check to \texttt{all(c in emoji.EMOJI\_DATA for c in word)} which works correctly for these cases.
+
+\item \textbf{Response time was measuring the wrong thing.} The code was adding the reply gap to \texttt{times[prev\_sender]} instead of \texttt{times[sender]}. This meant we were measuring how fast others reply to you, not how fast you reply to others. Changing the key fixed it.
+
+\item \textbf{Personality badges use exact equality.} If two users have exactly the same max score they both get the badge. We kept this as is for now and noted it as something to improve later.
+
+\end{itemize}
+
+\section{What We Would Do Differently With 10 More Hours}
+
+\begin{itemize}
+
+\item \textbf{Compare two profiles side by side.} The spec says users might want to see multiple profiles at once. Right now you can only view one profile at a time. We would add a mode where you pick two members and their stats appear next to each other.
+
+\item \textbf{Make messages look more like sentences.} Right now messages are just random words from the vocabulary file. It would be better if they followed a simple structure like subject verb object so they read more naturally.
+
+\item \textbf{Make the layout work on mobile.} The current design is only tested on a laptop. On a phone some slides go off screen. We would add media queries to fix the layout for smaller screens.
+
+\item \textbf{Fix tie breaking for badges.} If two users have the same score they both get the badge. We would add a rule to break the tie, for example by looking at total messages as a secondary sort.
+
+\item \textbf{Single command to run everything.} Right now you need four separate commands to go from vocabulary file to browser. We would make one script that runs all the steps and opens the browser automatically.
+
 \end{itemize}
 
 \begin{thebibliography}{9}
@@ -260,7 +290,16 @@ Tobias Ahlin.
 \textit{Common Flexbox Patterns}.
 \url{https://tobiasahlin.com/blog/common-flexbox-patterns/}
 
+\bibitem{emoji-pypi}
+The Python emoji Library.
+\textit{emoji 2.x documentation}.
+\url{https://pypi.org/project/emoji/}
+
+\bibitem{numpy-docs}
+NumPy Developers.
+\textit{numpy.random.choice documentation}.
+\url{https://numpy.org/doc/stable/reference/random/generated/numpy.random.choice.html}
+
 \end{thebibliography}
 
 \end{document}
-
