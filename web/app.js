@@ -1,6 +1,4 @@
-// WhatsApp Wrapped 2024 - app.js
-
-// ---- member colors ----
+// member colors 
 var members = ["Aryan", "Akshit", "Yash", "Shreya", "Dev", "Kavya", "Joshmitha", "Tanvi"];
 
 function getColor(name) {
@@ -19,7 +17,6 @@ var data = null;
 var slides = [];
 var currentSlide = 0;
 
-// ---- boot ----
 // fetches data.json then builds all slides and shows the first one
 async function boot() {
   var res = await fetch("../data.json");
@@ -30,7 +27,7 @@ async function boot() {
   document.getElementById("slide-total").textContent = "/ " + slides.length;
 }
 
-// ---- slide engine ----
+// slide engine 
 function showSlide(index) {
   var container = document.getElementById("slides");
 
@@ -47,7 +44,7 @@ function showSlide(index) {
   newSlide.className = "slide";
   newSlide.innerHTML = slides[index].getHTML();
 
-  // ---- inject ambient blobs centrally for every slide that has a color ----
+  // inject ambient blobs centrally for every slide that has a color 
   var color = slides[index].color;
   if (color) {
     newSlide.insertAdjacentHTML('afterbegin', `
@@ -81,7 +78,7 @@ function goToPrev() {
   if (currentSlide > 0) showSlide(currentSlide - 1);
 }
 
-// ---- controls ----
+//controls 
 function setupControls() {
   document.getElementById("btn-next").addEventListener("click", goToNext);
   document.getElementById("btn-prev").addEventListener("click", goToPrev);
@@ -107,7 +104,7 @@ function setupControls() {
   }, { passive: true });
 }
 
-// ---- animation helpers ----
+// animation helpers 
 // these are called in onEnter so animations trigger after the slide becomes visible
 function animateBars(root) {
   var bars = root.querySelectorAll(".bar-fill[data-w]");
@@ -134,9 +131,7 @@ function animateBubbles(root) {
   }
 }
 
-// ===========================================================
 // SLIDE BUILDERS
-// ===========================================================
 
 function slideIntro(d) {
   return {
@@ -641,7 +636,7 @@ function slideProfile(name, d) {
   };
 }
 
-// ---- assemble all slides in order ----
+// assemble all slides in order 
 function buildAllSlides(d) {
   var allSlides = [];
 
