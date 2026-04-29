@@ -43,9 +43,13 @@ python parser/analyze.py chat.txt
 - Reads `chat.txt`
 - Outputs `data.json` with all statistics
 
-### Step 3 — Open the slideshow
+### Step 3 — Start a local server and open the slideshow
 
-Open `web/index.html` in any browser. No server needed. The page reads `data.json` from a relative path so it works on any machine without changes.
+```bash
+python -m http.server 8000
+```
+
+Then open `http://localhost:8000/web/` in your browser. A local server is needed because the page fetches `data.json` using `fetch()` which browsers block on `file://` URLs.
 
 ---
 
@@ -106,10 +110,7 @@ The schema is split into two parts. Group level statistics have one value for th
       "Name": [["😂", 10], ["🔥", 6], ["💀", 4]]
     },
 
-    "busiest_day": {
-      "date": "22/07/24",
-      "count": 87
-    },
+    "busiest_day": ["22/07/24", 87],
 
     "longest_silence": {
       "hours": 14.5,
@@ -132,6 +133,10 @@ The schema is split into two parts. Group level statistics have one value for th
         "total": 120,
         "score": 10.0
       }
+    },
+
+    "time_of_day": {
+      "Name": [0, 0, 1, 3, 0, 0, 2, 8, 12, 15, 10, 9, 7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0]
     }
 
   }
@@ -155,6 +160,8 @@ The schema is split into two parts. Group level statistics have one value for th
 | 9 | `avg_response_time` | Median minutes before someone replies to you (within 60 min window) |
 | 10 | `hype_person` | Average minutes each person takes to reply to others (lower = more hype) |
 | 11 ⭐ | `conversation_killer` | % of your messages followed by 60+ min of silence — your kill score |
+| 12 ⭐ | `ghoster_score` | Standard deviation of gaps between your own messages — high score means burst then vanish |
+| 13 | `time_of_day` | Message count per hour (0 to 23) for each person — used for the activity bar chart on profile slides |
 
 ---
 
@@ -175,6 +182,8 @@ Whichever day had the most messages total.
 
 ---
 
-## Custom Statistic
+## Custom Statistics
 
-`conversation_killer` tracks what percentage of your messages are the last message before a 60 minute silence. The score is kills divided by total messages times 100. Most tools show you who starts conversations but nobody ever looks at who ends them. This stat fills that gap and pairs nicely with conversation_starter to show both ends of the dynamic. The full logic with comments is in `parser/analyze.py`.
+**conversation_killer** tracks what percentage of your messages are the last message before a 60 minute silence. The score is kills divided by total messages times 100. Most tools show you who starts conversations but nobody ever looks at who ends them. This stat fills that gap and pairs nicely with conversation_starter. The full logic with comments is in `parser/analyze.py`.
+
+**ghoster_score** measures how bursty someone's messaging pattern is. We collect all timestamps of a person's own messages and compute the standard deviation of the gaps between them. Someone who sends 5 messages in 30 seconds and then goes silent for 3 hours will have a very high score. Someone who messages steadily all day will have a low score. This is how Dev gets correctly identified as the Ghoster.
