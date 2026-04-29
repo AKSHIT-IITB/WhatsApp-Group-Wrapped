@@ -1,7 +1,3 @@
-/* ─────────────────────────────────────────
-   WHATSAPP WRAPPED — style.css
-───────────────────────────────────────── */
-
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -51,7 +47,7 @@ html, body {
   line-height: 1.5;
 }
 
-/* ─── SLIDE COUNTER ─────────────────────── */
+/*SLIDE COUNTER*/
 #counter-badge {
   position: fixed;
   top: 20px;
@@ -70,7 +66,7 @@ html, body {
 }
 #slide-counter { color: var(--text); }
 
-/* ─── SLIDE ENGINE ──────────────────────── */
+/*SLIDE ENGINE*/
 #slides {
   width: 100%;
   height: 100vh;
@@ -103,7 +99,7 @@ html, body {
   pointer-events: none;
 }
 
-/* ─── BACKGROUND BLOBS ──────────────────── */
+/*BACKGROUND BLOB*/
 .blob {
   position: absolute;
   border-radius: 50%;
@@ -119,7 +115,6 @@ html, body {
   to   { transform: translate(20px, -20px); }
 }
 
-/* ─── NAVIGATION ────────────────────────── */
 #nav {
   position: fixed;
   bottom: 24px;
@@ -159,8 +154,6 @@ html, body {
   opacity: 0.18;
   cursor: default;
 }
-
-/* ─── CLICK HINT ────────────────────────── */
 #click-hint {
   position: fixed;
   bottom: 78px;
@@ -178,7 +171,7 @@ html, body {
   100% { opacity: 0; }
 }
 
-/* ─── TYPOGRAPHY ────────────────────────── */
+/* TYPOGRAPHY */
 .slide-label {
   font-family: var(--font-body);
   font-size: 20px;
@@ -217,7 +210,7 @@ html, body {
   font-weight: 300;
 }
 
-/* ─── INTRO SLIDE ───────────────────────── */
+/* INTRO SLIDE */
 .intro-bg {
   position: absolute;
   inset: 0;
@@ -232,7 +225,7 @@ html, body {
   z-index: 0;
 }
 
-/* ─── BIG NUMBER ────────────────────────── */
+/* BIG NUMBER */
 .big-number {
   font-family: var(--font-display);
   font-size: clamp(72px, 15vw, 150px);
@@ -245,7 +238,6 @@ html, body {
   z-index: 1;
 }
 
-/* ─── CARD ──────────────────────────────── */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -255,7 +247,7 @@ html, body {
   z-index: 1;
 }
 
-/* ─── AVATAR ────────────────────────────── */
+
 .avatar {
   border-radius: 50%;
   display: flex;
@@ -271,7 +263,7 @@ html, body {
   background-repeat: no-repeat;
 }
 
-/* ─── HORIZONTAL BAR CHART ──────────────── */
+/*Horizontal Bar Chart*/
 .bar-chart {
   width: 100%;
   max-width: 660px;
@@ -328,14 +320,14 @@ html, body {
   text-align: right;
 }
 
-/* ─── GHOST PROGRESS BARS ───────────────── */
+/* GHOST BARS */
 .ghost-row {
   width: 100%;
   max-width: 520px;
   z-index: 1;
 }
 
-/* ─── PODIUM ────────────────────────────── */
+/* PODIUM */
 .podium-wrap--spaced {
   display: flex;
   flex-direction: row;
@@ -392,7 +384,7 @@ html, body {
   font-weight: 500;
 }
 
-/* ─── NIGHT OWL ─────────────────────────── */
+/* NIGHT OWL */
 .night-owl-wrap {
   display: flex;
   flex-direction: column;
@@ -402,7 +394,7 @@ html, body {
   width: 100%;
 }
 
-/* ─── SILENCE SLIDE ─────────────────────── */
+/* SILENCE */
 .silence-number {
   background: linear-gradient(135deg, #d4b0ff, #a8d8ff);
   -webkit-background-clip: text;
@@ -419,7 +411,7 @@ html, body {
 .silence-date-val    { color: var(--muted); }
 .silence-revived-val { color: var(--c-joshmitha); }
 
-/* ─── BUBBLE CHART ──────────────────────── */
+/*BUBBLE CHART */
 .bubble-wrap {
   display: flex;
   flex-wrap: wrap;
@@ -457,7 +449,7 @@ html, body {
   color: #000;
 }
 
-/* ─── BUSIEST DAY ───────────────────────── */
+/* BUSIEST DAY  */
 .busiest-day-sub {
   font-size: 18px;
   color: var(--muted);
@@ -478,7 +470,7 @@ html, body {
   color: var(--c-kavya);
 }
 
-/* ─── KILLER TABLE ──────────────────────── */
+/* CONVO KILLER TABLE */
 .killer-table {
   width: 100%;
   max-width: 620px;
@@ -532,7 +524,7 @@ html, body {
   color: #b8c0ff;
 }
 
-/* ─── STAT MINI CARDS ───────────────────── */
+/*STAT MINI CARDS */
 .stat-pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -561,7 +553,7 @@ html, body {
   font-weight: 400;
 }
 
-/* ─── PROFILE PICKER ────────────────────── */
+/* PROFILE PICKER */
 .picker-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -608,7 +600,7 @@ html, body {
   font-weight: 500;
 }
 
-/* ─── PROFILE SLIDE ─────────────────────── */
+/* PROFILE SLIDE  */
 .profile-layout {
   display: grid;
   grid-template-columns: 220px 1fr;
@@ -752,7 +744,7 @@ html, body {
   color: var(--muted);
 }
 
-/* ─── OVERALL EMOJI SLIDE ───────────────── */
+/* OVERALL EMOJI SLIDE */
 .emoji-list {
   width: 100%;
   max-width: 580px;
@@ -798,7 +790,7 @@ html, body {
   text-align: right;
 }
 
-/* ─── AMBIENT BLOBS ─────────────────────── */
+/* AMBIENT BLOBS */
 .blob-primary {
   width: 500px;
   height: 500px;
@@ -815,7 +807,7 @@ html, body {
   opacity: 0.1;
 }
 
-/* ─── HOUR DISTRIBUTION CHART ───────────── */
+/*  HOUR DISTRIBUTION CHART */
 .hour-chart {
   background: var(--surface);
   border: 1px solid var(--border);
