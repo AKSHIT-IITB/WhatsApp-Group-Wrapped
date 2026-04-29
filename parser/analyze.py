@@ -53,7 +53,6 @@ def word_count():
             counts[name]= counts[name]+(len(words)-4)
     return counts
 r=word_count()
-# print(f"word count is {r}")
 
 # -----------------------------------------------stat 3 -----------------------------------------------------------------
 # person who is active at night time (12am–4am)
@@ -85,7 +84,6 @@ def night_owl():
     f.close()
     return counts_msgs_night
 list=night_owl()
-# print(f"the night owl is {list}")
 
 # -----------------------------------------------stat 4 -----------------------------------------------------------------
 def ghost():
@@ -121,7 +119,6 @@ ghosted, msg = ghost()
 for person in msg:
     if msg[person] > 0:
         percentage = (ghosted[person] / msg[person]) * 100
-        # print(f"{person}: ghosted {ghosted[person]}/{msg[person]} = {percentage:.2f}%")
 
 # -----------------------------------------------stat 5 -----------------------------------------------------------------
 
@@ -150,7 +147,6 @@ def conversation_starter():
     f.close()
     return starter_counts
 starts=conversation_starter()
-# print(f"the conversation starter is {starts}")
 
 # -----------------------------------------------stat 6 -----------------------------------------------------------------
 def most_used_emoji():
@@ -172,7 +168,6 @@ def most_used_emoji():
         result[name]=sorted_emojis[:3]
     return result
 top_emojis=most_used_emoji()
-# print(f"most used emojis are {top_emojis}")
 
 # -----------------------------------------------stat 7 --------------------------------------------------------------
 # busy day definition: the day with the highest total message count across all members.
@@ -215,7 +210,6 @@ def longest_silence():
     hours=round(max_gap/3600, 2)
     return {"hours": hours, "days": round(hours/24, 2), "start": gap_start.strftime("%d/%m/%y %H:%M"), "end": gap_end.strftime("%d/%m/%y %H:%M")}
 silence=longest_silence()
-# print(f"the longest silence is {silence}")
 
 # -----------------------------------------------stat 9 ----------------------------------------------------------------------
 # measures how fast each person replies to others.
@@ -253,7 +247,6 @@ def avg_response_time():
             result[name]=None
     return result
 response=avg_response_time()
-# print(f"avg response time is {response}")
 
 # -----------------------------------------------stat 10 -----------------------------------------------------------------
 def hype_person():
@@ -288,7 +281,6 @@ def hype_person():
         avgs[name]=round(sum(t)/len(t), 2) if t else None
     return avgs
 hype=hype_person()
-# print(f"the hype person is {hype}")
 
 # -----------------------------------------------stat 11 (custom stat) --------------------------------------------------------
 # conversation killer: tracks who keeps ending the conversation.
@@ -325,7 +317,7 @@ def conversation_killer():
         sender=words[3][:-1]
         msg_counts[sender]=msg_counts[sender]+1
         dt=datetime.strptime(f"{words[0][:-1]} {words[1]}", "%d/%m/%y %H:%M")
-        killed = True  # default to kill if no valid next message
+        killed = True  
         if i+1 < len(lines):
             nxt=lines[i+1].strip().split()
             if len(nxt) >= 4:
@@ -344,18 +336,12 @@ def conversation_killer():
         per_person[name]={"kills": kills, "total": total, "score": round((kills/total)*100, 2) if total>0 else 0.0}
     return per_person
 killer=conversation_killer()
-# print(f"the conversation killer is {killer}")
-
-
 
 # -----------------------------------------------ghoster score (custom stat) ---------------------------------------------------
 # measures the burst-then-vanish pattern: how often someone fires messages rapidly and then goes silent.
 # we collect each person's own message timestamps and look at consecutive gaps between them.
 # if a gap is <= 2 min (burst) followed by a gap >= 60 min (disappear), that counts as one burst-then-vanish.
 # score = (burst_then_vanish events / total messages) * 100
-# NOTE: we had a bug earlier where we only looked at back-to-back lines from the same sender.
-# that missed the post-streak silences because other members message in between dev's bursts.
-# fix: collect each user's own timestamps independently, then compute gaps from those.
 def ghoster_score():
     lines = open(CHAT_FILE, encoding='utf-8').readlines()
     own_times = {n: [] for n in MEMBERS}
@@ -374,8 +360,6 @@ def ghoster_score():
         own_times[sender].append(dt)
 
     scores = {}
-    # gap <= 2 min means the person is in a burst (rapid fire messages)
-    # gap >= 60 min means the person vanished after that message
     BURST_GAP = 2
     SILENCE_GAP = 60
 
@@ -473,7 +457,7 @@ ghost_pct_pct   = {n: round((v / _max_ghost)  * 100, 1) if _max_ghost > 0 else 0
 starters_pct    = {n: round((v / _max_starts) * 100, 1) if _max_starts > 0 else 0.0 for n, v in starters.items()}
 hype_pct        = {n: round((v / _max_hype)   * 100, 1) for n, v in hype.items() if v is not None}
 
-# avg response time normalization for bubble sizing (norm 0-1, and pixel size 68-112)
+# avg response time normalization for bubble sizing 
 _resp_vals  = [v for v in response.values() if v is not None]
 _resp_min   = min(_resp_vals) if _resp_vals else 0
 _resp_max   = max(_resp_vals) if _resp_vals else 1
@@ -510,8 +494,7 @@ _min_hype_v   = min(v for _, v in _active_hype) if _active_hype else None
 
 _min_wpm = min(words_per_message.values())
 
-# total emojis sent per person — count all emoji tokens, not just top 3
-# using top-3 sum was wrong because it undercounts members who use many different emojis
+# total emojis sent per person 
 def _compute_emoji_totals():
     f = open(CHAT_FILE, encoding='utf-8')
     totals = {n: 0 for n in MEMBERS}
@@ -545,7 +528,7 @@ _personality_map = {
     "Regular":             {"label": "The Regular",              "emoji": "😎"},
 }
 
-# returns a list so dual-personality members (Tanvi) can have two badges
+# returns a list 
 def _get_personality(name):
     labels = []
     if total_msgs[name] == _max_msgs:
